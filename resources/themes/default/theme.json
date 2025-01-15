@@ -1,0 +1,7 @@
+{
+    "name": "Default Theme",
+    "slug": "default",
+    "version": "1.0.0",
+    "author": "StratumCMS",
+    "description": "Le thème par défaut activé automatiquement si aucun autre n'est défini."
+}
