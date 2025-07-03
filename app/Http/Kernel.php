@@ -21,6 +21,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        \App\Http\Middleware\ApplyCacheSettings::class,
     ];
 
     /**
@@ -38,6 +39,9 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\CheckInstallation::class,
             \App\Http\Middleware\LoadActiveTheme::class,
+            \App\Http\Middleware\TrackVisitor::class,
+            \App\Http\Middleware\MaintenanceMode::class,
+            \App\Http\Middleware\LimitLoginAttempts::class,
         ],
 
         'api' => [
@@ -67,5 +71,6 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'check.installation' => \App\Http\Middleware\CheckInstallation::class,
+        'restrict.ip' => \App\Http\Middleware\RestrictAdminAccess::class,
     ];
 }

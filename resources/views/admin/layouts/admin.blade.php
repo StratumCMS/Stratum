@@ -2,32 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script>
+        (function () {
+            try {
+                const theme = localStorage.getItem('stratum-theme') || 'dark';
+                document.documentElement.classList.add(theme);
+            } catch (e) {}
+        })();
+    </script>
+
     <title>@yield('title', 'Admin Dashboard')</title>
     <link href="{{ asset('build/assets/admin.css') }}" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/91664c67de.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ asset('assets/js/admin.js') }}"></script>
 </head>
-<body class="bg-background text-text font-sans min-h-screen">
-<div class="flex">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-secondary backdrop-blur-lg shadow-glass min-h-screen px-4 py-6">
-        <div class="text-2xl font-bold mb-8">Admin Panel</div>
-        <nav>
-            <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 hover:bg-primary rounded-md">Dashboard</a>
-            <a href="{{ route('themes.index') }}" class="block px-4 py-2 hover:bg-primary rounded-md">Themes</a>
-            <a href="{{ route('modules.index') }}" class="block px-4 py-2 hover:bg-primary rounded-md">Modules</a>
-            <a href="{{ route('admin.settings') }}" class="block px-4 py-2 hover:bg-primary rounded-md">Settings</a>
-        </nav>
-    </aside>
+<body class="min-h-screen flex w-full bg-background text-foreground">
 
-    <!-- Main Content -->
-    <main class="flex-1 p-6">
-        <header class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold">@yield('title')</h1>
-        </header>
-        <div>
-            @yield('content')
-        </div>
+@include('admin.partials.sidebar')
+
+<div class="flex-1 min-h-screen md:pl-64 flex flex-col">
+    @include('admin.partials.topbar')
+    <main class="p-6 animate-fade-in">
+        @yield('content')
     </main>
 </div>
+
+@stack('scripts')
 </body>
 </html>

@@ -1,3 +1,213 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Design system colors and variables */
+@layer base {
+    :root {
+        /* Light mode colors - Pure white/gray theme */
+        --background: 0 0% 100%; /* Pure white */
+        --foreground: 222 84% 5%; /* Dark slate gray */
+
+        --card: 0 0% 100%; /* Pure white */
+        --card-foreground: 222 84% 5%;
+
+        --popover: 0 0% 100%;
+        --popover-foreground: 222 84% 5%;
+
+        --primary: 271 91% 65%; /* Purple */
+        --primary-foreground: 0 0% 100%;
+
+        --secondary: 210 40% 98%; /* Very light gray */
+        --secondary-foreground: 222 84% 5%;
+
+        --muted: 210 40% 98%; /* Light gray background */
+        --muted-foreground: 215 16% 47%; /* Medium gray text */
+
+        --accent: 210 40% 98%; /* Light gray accent */
+        --accent-foreground: 271 91% 65%; /* Purple text on light accent */
+
+        --destructive: 0 84% 60%; /* Red */
+        --destructive-foreground: 0 0% 100%;
+
+        --success: 142 76% 36%; /* Green */
+        --warning: 32 95% 44%; /* Orange */
+
+        --border: 214 32% 91%; /* Light gray border */
+        --input: 0 0% 100%; /* White input background */
+        --ring: 271 91% 65%; /* Purple ring */
+
+        --radius: 0.5rem;
+
+        /* Sidebar colors - Pure white theme */
+        --sidebar-background: 0 0% 100%; /* Pure white */
+        --sidebar-foreground: 222 84% 5%;
+        --sidebar-primary: 271 91% 65%; /* Purple */
+        --sidebar-primary-foreground: 0 0% 100%;
+        --sidebar-accent: 210 40% 98%; /* Light gray accent */
+        --sidebar-accent-foreground: 271 91% 65%; /* Purple text */
+        --sidebar-border: 214 32% 91%;
+        --sidebar-ring: 271 91% 65%;
+    }
+
+    .dark {
+        /* Dark mode colors with purple accents */
+        --background: 222 84% 4%; /* Very dark slate */
+        --foreground: 210 40% 98%; /* Light gray text */
+
+        --card: 222 84% 8%; /* Dark card */
+        --card-foreground: 210 40% 98%;
+
+        --popover: 222 84% 8%;
+        --popover-foreground: 210 40% 98%;
+
+        --primary: 271 91% 65%; /* Brighter purple */
+        --primary-foreground: 222 84% 4%;
+
+        --secondary: 217 32% 17%; /* Dark gray */
+        --secondary-foreground: 210 40% 98%;
+
+        --muted: 217 32% 17%;
+        --muted-foreground: 215 16% 65%;
+
+        --accent: 217 32% 17%; /* Dark accent */
+        --accent-foreground: 271 91% 65%;
+
+        --destructive: 0 62% 50%;
+        --destructive-foreground: 210 40% 98%;
+
+        --success: 142 76% 36%;
+        --warning: 32 95% 44%;
+
+        --border: 217 32% 17%;
+        --input: 217 32% 17%; /* Dark input background */
+        --ring: 271 91% 65%;
+
+        --sidebar-background: 222 84% 8%;
+        --sidebar-foreground: 210 40% 98%;
+        --sidebar-primary: 271 91% 65%;
+        --sidebar-primary-foreground: 222 84% 4%;
+        --sidebar-accent: 217 32% 17%;
+        --sidebar-accent-foreground: 271 91% 65%;
+        --sidebar-border: 217 32% 17%;
+        --sidebar-ring: 271 91% 65%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground font-sans antialiased;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-semibold text-foreground;
+    }
+}
+
+/* Purple glow effects */
+@layer utilities {
+    .glow-purple {
+        box-shadow: 0 0 20px rgba(139, 69, 193, 0.3);
+    }
+
+    .dark .glow-purple {
+        box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+    }
+
+    .hover-glow-purple {
+        @apply transition-all duration-300;
+    }
+
+    .hover-glow-purple:hover {
+        box-shadow: 0 0 25px rgba(139, 69, 193, 0.5);
+        transform: translateY(-2px);
+    }
+
+    .dark .hover-glow-purple:hover {
+        box-shadow: 0 0 25px rgba(168, 85, 247, 0.6);
+    }
+
+    .text-glow-purple {
+        text-shadow: 0 0 10px rgba(139, 69, 193, 0.5);
+    }
+
+    .dark .text-glow-purple {
+        text-shadow: 0 0 10px rgba(168, 85, 247, 0.6);
+    }
+
+    .animate-count-up {
+        animation: countUp 2s ease-out;
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .animate-slide-in {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    .hover-scale {
+        @apply transition-transform duration-200 hover:scale-105;
+    }
+
+    .hover-lift {
+        @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-lg;
+    }
+}
+
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-muted;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+}

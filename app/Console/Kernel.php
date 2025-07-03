@@ -12,7 +12,15 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        $frequency = setting('backup_frequency', 'daily');
+
+        match ($frequency) {
+            'daily' => $schedule->command('backup:auto')->daily(),
+            'weekly' => $schedule->command('backup:auto')->weekly(),
+            'monthly' => $schedule->command('backup:auto')->monthly(),
+            'yearly' => $schedule->command('backup:auto')->yearly(),
+            default => $schedule->command('backup:auto')->daily(),
+        };
     }
 
     /**

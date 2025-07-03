@@ -13,7 +13,7 @@ class ThemeController extends Controller
     public function index()
     {
         $themes = Theme::all();
-        return view('admin.themes.index', compact('themes'));
+        return view('admin.themes', compact('themes'));
     }
 
     public function activate($slug)
