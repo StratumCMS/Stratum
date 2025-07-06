@@ -31,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
                 ['route'=>'themes.index','icon'=>'fa-star','label'=>'Thèmes'],
                 ['route'=>'modules.index','icon'=>'fa-th','label'=>'Modules'],
                 ['route'=>'admin.users','icon'=>'fa-users','label'=>'Utilisateurs'],
+                ['route'=>'admin.roles.index','icon'=>'fa-solid fa-shield','label'=>'Roles'],
                 ['route'=>'admin.stats','icon'=>'fa-chart-pie','label'=>'Statistiques'],
                 ['route'=>'admin.settings','icon'=>'fa-cog','label'=>'Paramètres'],
             ];

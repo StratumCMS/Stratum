@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\Module;
+use App\Models\Page;
+use App\Models\Role;
 use App\Models\Setting;
 use App\Models\Theme;
 use App\Models\User;
@@ -19,23 +21,25 @@ class AdminController extends Controller
         $themeCount = Theme::count();
         $moduleCount = Module::where('active', true)->count();
 
-        // Visiteurs des 30 derniers jours
         $visitors30d = Visit::where('visited_at', '>=', now()->subDays(30))->count();
         $visitorsPrev30d = Visit::whereBetween('visited_at', [now()->subDays(60), now()->subDays(31)])->count();
 
-        // Variation en %
         $visitorChange = 0;
         if ($visitorsPrev30d > 0) {
             $visitorChange = round((($visitors30d - $visitorsPrev30d) / $visitorsPrev30d) * 100, 1);
         }
 
-        // Pour les autres stats (placeholder en attendant)
-        $pageViews = 48392;
+        $pageViews = Page::sum('views');
+
+        $lastMonth = now()->subMonth();
+        $currentViews = Page::where('updated_at', '>=', $lastMonth)->sum('views');
+        $previousViews = Page::whereBetween('updated_at', [now()->subMonths(2), $lastMonth])->sum('views');
+
+        $pageViewsChange = $previousViews > 0 ? round((($currentViews - $previousViews) / $previousViews) * 100, 1) : 0;
+
         $articlesPublished = 156;
-        $pageViewsChange = 8.2;
         $articlesChange = -2.1;
 
-        // Statistiques globales pour la vue
         $stats = [
             [
                 'title' => 'Visiteurs (30j)',
@@ -101,11 +105,6 @@ class AdminController extends Controller
         return response()->json($data);
     }
 
-    public function pages()
-    {
-        return view('admin.page');
-    }
-
     public function articles()
     {
         return view('admin.article');
@@ -129,8 +128,44 @@ class AdminController extends Controller
 
     public function users()
     {
-        return view('admin.users');
+        $users = User::with(['roles'])->get();
+
+        $roles = Role::all()->map(function ($role) use ($users) {
+            return [
+                'name' => $role->name,
+                'icon' => match($role->name) {
+                    'admin' => 'crown',
+                    'Éditeur' => 'pen',
+                    'Contributeur' => 'user',
+                    'Modérateur' => 'shield-alt',
+                    default => 'user'
+                },
+                'color' => match($role->name) {
+                    'admin' => 'bg-red-500',
+                    'Éditeur' => 'bg-blue-500',
+                    'Contributeur' => 'bg-green-500',
+                    'Modérateur' => 'bg-purple-500',
+                    default => 'bg-muted'
+                },
+                'count' => $users->filter(fn($user) => $user->hasRole($role->name))->count(),
+            ];
+        });
+
+        foreach ($users as $user) {
+            $role = $user->roles->first();
+            $user->display_role = $role?->name ?? 'Aucun';
+            $user->role_color = match($role?->name) {
+                'admin' => 'bg-red-500',
+                'Éditeur' => 'bg-blue-500',
+                'Contributeur' => 'bg-green-500',
+                'Modérateur' => 'bg-purple-500',
+                default => 'bg-muted'
+            };
+        }
+
+        return view('admin.users', compact('users', 'roles'));
     }
+
 
     public function settings()
     {

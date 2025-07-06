@@ -13,12 +13,20 @@ class ThemeController extends Controller
     public function index()
     {
         $themes = Theme::all();
+        $this->scanAndAddThemes();
         return view('admin.themes', compact('themes'));
     }
 
     public function activate($slug)
     {
         $theme = Theme::where('slug', $slug)->firstOrFail();
+
+        if (app()->environment('local')) {
+            Theme::where('active', true)->update(['active' => false]);
+            $theme->update(['active' => true]);
+
+            return back()->with('success', "Thème {$theme->name} activé localement.");
+        }
 
         $license = License::first();
         if (!$license) {
@@ -36,6 +44,7 @@ class ThemeController extends Controller
         return back()->with('success', 'Thème activé avec succès.');
     }
 
+
     public function deactivate($slug){
         $theme = Theme::where('slug', $slug)->firstOrFail();
         $theme->update(['active' => false]);
@@ -49,7 +58,7 @@ class ThemeController extends Controller
     }
 
     public function scanAndAddThemes(){
-        $themesDir = base_path('themes');
+        $themesDir = resource_path('themes');
         $directories = File::directories($themesDir);
 
         foreach ($directories as $directory) {
@@ -116,6 +125,44 @@ class ThemeController extends Controller
                 $defaultTheme->update(['active' => true]);
             }
         }
+    }
+
+    public function customize($slug)
+    {
+        $theme = Theme::where('slug', $slug)->firstOrFail();
+        $rulesPath = resource_path("themes/{$theme->slug}/config/rules.php");
+        $configViewPath = resource_path("themes/{$theme->slug}/config/config.blade.php");
+
+        if (!File::exists($rulesPath) || !File::exists($configViewPath)) {
+            return back()->with('error', 'Ce thème ne supporte pas la personnalisation.');
+        }
+
+        $fields = require $rulesPath;
+        $values = cache()->get("theme_config_{$theme->slug}", []);
+        $configViewContent = File::get($configViewPath);
+
+        return view('admin.customize-theme', compact('theme', 'fields', 'values', 'configViewContent'));
+    }
+
+
+    public function saveCustomization(Request $request, $slug)
+    {
+        $theme = Theme::where('slug', $slug)->firstOrFail();
+        $rules = require resource_path("themes/{$theme->slug}/config/rules.php");
+
+        $validated = [];
+
+        foreach ($rules as $key => $field) {
+            if ($field['type'] === 'checkbox') {
+                $validated[$key] = $request->has($key);
+            } else {
+                $validated[$key] = $request->input($key, $field['default']);
+            }
+        }
+
+        cache()->put("theme_config_{$theme->slug}", $validated);
+
+        return back()->with('success', 'Personnalisation enregistrée avec succès.');
     }
 
 }

@@ -71,6 +71,6 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'check.installation' => \App\Http\Middleware\CheckInstallation::class,
-        'restrict.ip' => \App\Http\Middleware\RestrictAdminAccess::class,
+        'restrict.ip' => \App\Http\Middleware\RestrictAdminAccess::class
     ];
 }

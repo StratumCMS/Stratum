@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -58,7 +59,9 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return view('admin.users.edit', compact('user'));
+        $user->load(['roles.permissions']);
+        $roles = Role::with('permissions')->get();
+        return view('admin.users-edit', compact('user', 'roles'));
     }
 
     /**
@@ -69,9 +72,13 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
+            'status' => 'required|in:Actif,Inactif',
+            'role' => 'required|exists:roles,name'
         ]);
 
-        $user->update($request->only('name', 'email'));
+        $user->update($request->only('name', 'email', 'status'));
+
+        $user->syncRoles([$request->role]);
 
         return redirect()->route('users.index')->with('success', 'Utilisateur mis à jour avec succès.');
     }

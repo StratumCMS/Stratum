@@ -82,18 +82,22 @@
         <div class="bg-card/50 backdrop-blur-sm rounded-xl p-6 border border-border hover-glow-purple">
             <h3 class="text-lg font-semibold text-foreground mb-4 text-glow-purple">Actions rapides</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="p-4 bg-primary/5 rounded-lg border border-primary/20 hover-lift hover-glow-purple cursor-pointer transition-all">
-                    <h4 class="font-medium text-foreground">Créer une page</h4>
-                    <p class="text-sm text-muted-foreground mt-1">Ajouter une nouvelle page à votre site</p>
-                </div>
+                <a href="{{route('admin.pages')}}">
+                    <div class="p-4 bg-primary/5 rounded-lg border border-primary/20 hover-lift hover-glow-purple cursor-pointer transition-all">
+                        <h4 class="font-medium text-foreground">Créer une page</h4>
+                        <p class="text-sm text-muted-foreground mt-1">Ajouter une nouvelle page à votre site</p>
+                    </div>
+                </a>
                 <div class="p-4 bg-success/5 rounded-lg border border-success/20 hover-lift hover-glow-purple cursor-pointer transition-all">
                     <h4 class="font-medium text-foreground">Nouvel article</h4>
                     <p class="text-sm text-muted-foreground mt-1">Rédiger et publier un article</p>
                 </div>
-                <div class="p-4 bg-purple-500/5 rounded-lg border border-purple-500/20 hover-lift hover-glow-purple cursor-pointer transition-all">
-                    <h4 class="font-medium text-foreground">Installer un module</h4>
-                    <p class="text-sm text-muted-foreground mt-1">Étendre les fonctionnalités</p>
-                </div>
+                <a href="{{route('modules.index')}}">
+                    <div class="p-4 bg-purple-500/5 rounded-lg border border-purple-500/20 hover-lift hover-glow-purple cursor-pointer transition-all">
+                        <h4 class="font-medium text-foreground">Installer un module</h4>
+                        <p class="text-sm text-muted-foreground mt-1">Étendre les fonctionnalités</p>
+                    </div>
+                </a>
             </div>
         </div>
 

@@ -3,10 +3,15 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InstallController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\UserController;
+use App\Http\Middleware\LoadActiveTheme;
+use App\Http\Middleware\PreviewTheme;
+use App\Models\Theme;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,9 +25,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['check.installation'])->group(function () {
+require __DIR__.'/auth.php';
 
+require __DIR__.'/admin.php';
 
+Route::middleware(['check.installation', LoadActiveTheme::class])->group(function () {
 
     Route::get('/', function () {
         return view('theme::home');
@@ -45,36 +52,6 @@ Route::middleware(['check.installation'])->group(function () {
         Route::post('/step-5', [InstallController::class, 'storeStep5'])->name('install.storeStep5');
     });
 
-    Route::middleware(['auth', 'can:access_dashboard', 'restrict.ip'])->prefix('admin')->group(function () {
-        Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-        Route::get('/pages', [AdminController::class, 'page'])->name('admin.pages');
-        Route::get('/articles', [AdminController::class, 'articles'])->name('admin.articles');
-        Route::get('/media', [MediaController::class, 'index'])->name('admin.media');
-        Route::post('/media/upload', [MediaController::class, 'upload'])->name('admin.media.upload');
-        Route::delete('/media/{mediaItem}', [MediaController::class, 'delete'])->name('admin.media.delete');
-        Route::get('/themes', [AdminController::class, 'themePage'])->name('admin.themes');
-        Route::get('/modules', [AdminController::class, 'modulePage'])->name('admin.modules');
-        Route::get('/stats', [AdminController::class, 'stats'])->name('admin.stats');
-        Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
-        Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
-        Route::post('/settings', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
-
-        Route::get('/visitors/data/{days}', [AdminController::class, 'visitorData']);
-
-
-        Route::get('/themes', [ThemeController::class, 'index'])->name('themes.index');
-        Route::post('/themes/activate/{slug}', [ThemeController::class, 'activate'])->name('themes.activate');
-        Route::post('/themes/deactivate/{slug}', [ThemeController::class, 'deactivate'])->name('themes.deactivate');
-        Route::post('/themes/scan', [ThemeController::class, 'scanAndAddThemes'])->name('themes.scan');
-        Route::post('/themes/update/{slug}', [ThemeController::class, 'update'])->name('themes.update');
-
-        Route::get('/modules', [ModuleController::class, 'index'])->name('modules.index');
-        Route::post('/modules/activate/{slug}', [ModuleController::class, 'activate'])->name('modules.activate');
-        Route::post('/modules/deactivate/{slug}', [ModuleController::class, 'deactivate'])->name('modules.deactivate');
-        Route::post('/modules/scan', [ModuleController::class, 'scanAndAddModules'])->name('modules.scan');
-        Route::post('/modules/update/{slug}', [ModuleController::class, 'update'])->name('modules.update');
-    });
-
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->middleware(['auth', 'verified'])->name('dashboard');
@@ -85,6 +62,9 @@ Route::middleware(['check.installation'])->group(function () {
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     });
 
-});
+    Route::middleware([LoadActiveTheme::class])->group(function () {
+        Route::get('/{slug}', [PageController::class, 'show'])->name('pages.show');
+    });
 
-require __DIR__.'/auth.php';
+
+});
