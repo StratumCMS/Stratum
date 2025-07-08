@@ -3,7 +3,7 @@
 @section('title', 'Paramètres')
 
 @section('content')
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-4xl mx-auto" x-data>
         @if (session('success'))
             <div class="mb-6 p-4 bg-green-100 text-green-800 rounded-lg border border-green-300 shadow">
                 <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
@@ -24,22 +24,23 @@
             @csrf
 
             <div x-data="{ tab: 'general' }" class="space-y-8">
+                {{-- Tabs --}}
                 <div class="flex flex-wrap justify-start gap-2 border-b pb-2 mb-4">
                     <template x-for="tabInfo in [
-        { key: 'general', label: 'Général', icon: 'fas fa-cog' },
-        { key: 'seo', label: 'SEO', icon: 'fas fa-search' },
-        { key: 'security', label: 'Sécurité', icon: 'fas fa-shield-alt' },
-        { key: 'notifications', label: 'Notifications', icon: 'fas fa-bell' },
-        { key: 'backup', label: 'Sauvegarde', icon: 'fas fa-database' },
-        { key: 'performance', label: 'Performance', icon: 'fas fa-tachometer-alt' }
-    ]">
+                        { key: 'general', label: 'Général', icon: 'fas fa-cog' },
+                        { key: 'seo', label: 'SEO', icon: 'fas fa-search' },
+                        { key: 'security', label: 'Sécurité', icon: 'fas fa-shield-alt' },
+                        { key: 'notifications', label: 'Notifications', icon: 'fas fa-bell' },
+                        { key: 'backup', label: 'Sauvegarde', icon: 'fas fa-database' },
+                        { key: 'performance', label: 'Performance', icon: 'fas fa-tachometer-alt' }
+                    ]">
                         <button
                             type="button"
                             @click="tab = tabInfo.key"
                             :class="{
-                'bg-primary text-white shadow-sm': tab === tabInfo.key,
-                'bg-muted text-muted-foreground hover:bg-muted/80': tab !== tabInfo.key
-            }"
+                                'bg-primary text-white shadow-sm': tab === tabInfo.key,
+                                'bg-muted text-muted-foreground hover:bg-muted/80': tab !== tabInfo.key
+                            }"
                             class="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all">
                             <i :class="tabInfo.icon"></i>
                             <span x-text="tabInfo.label"></span>
@@ -47,41 +48,59 @@
                     </template>
                 </div>
 
-
                 {{-- Onglet Général --}}
-                <div x-show="tab === 'general'" class="flex flex-col p-6 rounded-lg border bg-card text-card-foreground shadow-sm space-y-5 hover-glow-purple"
-                     x-data="{ maintenanceChecked: {{ setting('maintenance_mode') ? 'true' : 'false' }} }">
+                <div x-show="tab === 'general'" class="flex flex-col p-6 rounded-lg border bg-card text-card-foreground shadow-sm space-y-5 hover-glow-purple" x-data="{ maintenanceChecked: {{ setting('maintenance_mode') ? 'true' : 'false' }} }">
                     <x-setting.title icon="fas fa-cog" label="Paramètres généraux" />
                     <x-setting.input name="site_name" label="Nom du site" :value="setting('site_name')" />
-                    <x-setting.textarea name="site_description" label="Description"
-                                        :value="setting('site_description')" />
-                    <x-setting.input name="site_keywords" label="Mots-clés"
-                                     :value="setting('site_keywords')" />
+                    <x-setting.textarea name="site_description" label="Description" :value="setting('site_description')" />
+                    <x-setting.input name="site_keywords" label="Mots-clés" :value="setting('site_keywords')" />
+
+                    {{-- Logo --}}
+                    <div x-data="mediaSelector('site_logo', '{{ setting('site_logo') }}')" class="space-y-2">
+                        <x-setting.label text="Logo du site" />
+                        <template x-if="previewUrl">
+                            <div class="relative w-40">
+                                <img :src="previewUrl" class="rounded border shadow-sm">
+                                <button type="button" @click="clear()" class="btn btn-destructive btn-sm absolute top-1 right-1">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </template>
+                        <button type="button" @click="open()" class="btn btn-outline">
+                            <i class="fas fa-image mr-2"></i> Choisir le logo
+                        </button>
+                        <input type="hidden" :name="field" :value="selectedUrl">
+                    </div>
+
+                    {{-- Favicon --}}
+                    <div x-data="mediaSelector('site_favicon', '{{ setting('site_favicon') }}')" class="space-y-2">
+                        <x-setting.label text="Favicon" />
+                        <template x-if="previewUrl">
+                            <div class="relative w-16">
+                                <img :src="previewUrl" class="rounded border shadow-sm">
+                                <button type="button" @click="clear()" class="btn btn-destructive btn-sm absolute top-1 right-1">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </template>
+                        <button type="button" @click="open()" class="btn btn-outline">
+                            <i class="fas fa-image mr-2"></i> Choisir le favicon
+                        </button>
+                        <input type="hidden" :name="field" :value="selectedUrl">
+                    </div>
 
                     <div @change="maintenanceChecked = $event.target.checked">
-                        <x-setting.toggle
-                            name="maintenance_mode"
-                            label="Mode maintenance"
-                            description="Désactiver temporairement l'accès public"
-                            :checked="setting('maintenance_mode')" />
+                        <x-setting.toggle name="maintenance_mode" label="Mode maintenance" description="Désactiver temporairement l'accès public" :checked="setting('maintenance_mode')" />
                     </div>
 
                     {{-- Détails maintenance --}}
                     <div x-show="maintenanceChecked" x-cloak class="mt-4 space-y-4 border-t pt-4">
-                        <x-setting.input
-                            name="maintenance_title"
-                            label="Titre de la page de maintenance"
-                            :value="setting('maintenance_title', 'Site en maintenance')"
-                            description="Titre affiché aux visiteurs" />
-                        <x-setting.textarea
-                            name="maintenance_message"
-                            label="Message de maintenance"
-                            :value="setting('maintenance_message', 'Nous sommes actuellement en maintenance. Merci de revenir plus tard.')"
-                            description="Message affiché aux visiteurs" />
+                        <x-setting.input name="maintenance_title" label="Titre de la page de maintenance" :value="setting('maintenance_title', 'Site en maintenance')" />
+                        <x-setting.textarea name="maintenance_message" label="Message de maintenance" :value="setting('maintenance_message', 'Nous sommes actuellement en maintenance. Merci de revenir plus tard.')" />
                     </div>
                 </div>
 
-                {{-- SEO --}}
+                {{-- Onglets restants --}}
                 <div x-show="tab === 'seo'" x-cloak class="flex flex-col p-6 rounded-lg border bg-card text-card-foreground shadow-sm space-y-5 hover-glow-purple">
                     <x-setting.title icon="fas fa-search" label="Référencement (SEO)" />
                     <x-setting.toggle name="seo_enabled" label="SEO activé" description="Activer les options SEO"
@@ -92,8 +111,6 @@
                                       description="Contrôle de l'indexation par les moteurs de recherche"
                                       :checked="setting('robots_txt')" />
                 </div>
-
-                {{-- Onglet Sécurité --}}
                 <div x-show="tab === 'security'" x-cloak
                      class="flex flex-col p-6 rounded-lg border bg-card text-card-foreground shadow-sm space-y-5 hover-glow-purple"
                      x-data="{
@@ -166,11 +183,6 @@
                     </div>
                 </div>
 
-
-
-
-
-                {{-- Notifications --}}
                 <div x-show="tab === 'notifications'" x-cloak class="flex flex-col p-6 rounded-lg border bg-card text-card-foreground shadow-sm space-y-5 hover-glow-purple">
                     <x-setting.title icon="fas fa-bell" label="Notifications" />
                     <x-setting.toggle name="email_notifications" label="Email"
@@ -181,7 +193,6 @@
                                       description="Recevoir les alertes critiques" :checked="setting('admin_notifications')" />
                 </div>
 
-                {{-- Sauvegarde --}}
                 <div x-show="tab === 'backup'" x-cloak class="flex flex-col p-6 rounded-lg border bg-card text-card-foreground shadow-sm space-y-5 hover-glow-purple">
                     <x-setting.title icon="fas fa-database" label="Sauvegarde" />
                     <x-setting.toggle name="auto_backup" label="Auto sauvegarde"
@@ -195,7 +206,6 @@
 
                 </div>
 
-                {{-- Performance --}}
                 <div x-show="tab === 'performance'" x-cloak class="flex flex-col p-6 rounded-lg border bg-card text-card-foreground shadow-sm space-y-5 hover-glow-purple">
                     <x-setting.title icon="fas fa-tachometer-alt" label="Performance" />
                     <x-setting.toggle name="cache_enabled" label="Cache activé"
@@ -206,18 +216,75 @@
                                       description="Améliore le chargement des images" :checked="setting('image_optimization')" />
                 </div>
 
-                {{-- Bouton Submit --}}
                 <div class="text-right pt-6">
-                    <button type="submit"
-                            class="px-6 py-2 bg-primary text-white rounded hover:bg-primary/90 transition shadow">
+                    <button type="submit" class="px-6 py-2 bg-primary text-white rounded hover:bg-primary/90 transition shadow">
                         <i class="fas fa-save mr-2"></i> Enregistrer les modifications
                     </button>
                 </div>
             </div>
         </form>
+
+        {{-- Modal Bibliothèque Média --}}
+        <div x-show="$store.mediaModal.modalOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50" x-cloak>
+            <div class="bg-card rounded-lg max-w-3xl w-full p-6 space-y-4" @click.away="$store.mediaModal.close()">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-semibold">Bibliothèque de médias</h2>
+                    <button @click="$store.mediaModal.close()" class="text-muted-foreground"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="grid grid-cols-4 gap-4 overflow-y-auto max-h-80">
+                    @foreach($mediaItems as $media)
+                        <div @click="$store.mediaModal.select({ url: '{{ $media->getUrl() }}' })" class="cursor-pointer border hover:bg-muted/10 p-1 rounded">
+                            <img src="{{ $media->getUrl() }}" class="w-full h-20 object-cover rounded">
+                        </div>
+                    @endforeach
+                </div>
+                <a href="{{ route('admin.media') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-white hover:bg-primary/90 transition shadow">
+                    Uploader un média
+                </a>
+            </div>
+        </div>
     </div>
 @endsection
 
 @push('scripts')
     <script src="https://unpkg.com/alpinejs" defer></script>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('mediaModal', {
+                modalOpen: false,
+                callback: null,
+                open(callback) {
+                    this.modalOpen = true;
+                    this.callback = callback;
+                },
+                close() {
+                    this.modalOpen = false;
+                    this.callback = null;
+                },
+                select(media) {
+                    if (this.callback) this.callback(media);
+                    this.close();
+                }
+            });
+        });
+
+        function mediaSelector(field, initialValue = '') {
+            return {
+                field,
+                selectedUrl: initialValue,
+                previewUrl: initialValue,
+                open() {
+                    Alpine.store('mediaModal').open(this.select.bind(this));
+                },
+                select(media) {
+                    this.selectedUrl = media.url;
+                    this.previewUrl = media.url;
+                },
+                clear() {
+                    this.selectedUrl = '';
+                    this.previewUrl = '';
+                }
+            }
+        }
+    </script>
 @endpush

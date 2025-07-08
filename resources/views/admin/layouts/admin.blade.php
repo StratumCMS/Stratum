@@ -13,7 +13,7 @@
         })();
     </script>
 
-    <title>@yield('title', 'Admin Dashboard')</title>
+    <title>{{ site_name() ?? "StratumCMS" }} - @yield('title', 'Admin Dashboard')</title>
     <link href="{{ asset('build/assets/admin.css') }}" rel="stylesheet">
     <script src="https://kit.fontawesome.com/91664c67de.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

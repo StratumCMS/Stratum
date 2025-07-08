@@ -1,6 +1,7 @@
 @extends('theme::layout')
 
 @section('title', $page->title)
+@section('description', $page->meta_description)
 
 @section('content')
     <div class="prose max-w-none">

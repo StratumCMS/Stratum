@@ -23,6 +23,7 @@ class User extends Authenticatable
         'password',
         'status',
         'last_login_at',
+        'avatar_url',
     ];
 
     /**
@@ -62,5 +63,10 @@ class User extends Authenticatable
     public function hasPermission($permission)
     {
         return $this->permissions()->contains('name', $permission);
+    }
+
+    public function likedArticles()
+    {
+        return $this->belongsToMany(Article::class, 'likes')->withTimestamps();
     }
 }

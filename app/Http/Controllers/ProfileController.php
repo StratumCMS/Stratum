@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -19,6 +20,39 @@ class ProfileController extends Controller
         return view('profile.edit', [
             'user' => $request->user(),
         ]);
+    }
+
+    public function adminEdit(Request $request): View
+    {
+        return view('admin.edit-profile', [
+            'user' => $request->user(),
+        ]);
+    }
+
+    public function updateAdmin(ProfileUpdateRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $data = $request->validated();
+
+        if ($request->hasFile('avatar')) {
+            $avatar = $request->file('avatar');
+
+            if ($user->avatar_url && Storage::exists($user->avatar_url)) {
+                Storage::delete($user->avatar_url);
+            }
+
+            $path = $avatar->store('avatars', 'public');
+            $data['avatar_url'] = Storage::url($path);
+        }
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->update($data);
+
+        return Redirect::route('admin.profile')->with('success', 'Profil mis à jour');
     }
 
     /**

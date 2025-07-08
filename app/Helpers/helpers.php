@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\NavbarElement;
+use App\Models\Setting;
 use App\Models\Theme;
 use Illuminate\Support\Facades\DB;
 
@@ -32,3 +34,40 @@ if (!function_exists('theme_asset')) {
         return asset("themes/default/assets/" . ltrim($path, '/'));
     }
 }
+
+if (!function_exists('format_date')) {
+    function format_date($date, $format = 'd M Y') {
+        return $date ? \Carbon\Carbon::parse($date)->translatedFormat($format) : '';
+    }
+}
+
+
+if (!function_exists('site_name')) {
+    function site_name()
+    {
+        return Setting::get('site_name', config('app.name'));
+    }
+}
+
+if (!function_exists('site_logo')) {
+    function site_logo()
+    {
+        return Setting::get('site_logo', '/default-logo.png');
+    }
+}
+
+if (!function_exists('favicon')) {
+    function favicon()
+    {
+        return Setting::get('site_favicon', '/default-logo.png');
+    }
+}
+
+function get_navigation_items()
+{
+    return \App\Models\NavbarElement::with(['children' => fn($q) => $q->orderBy('position')])
+        ->whereNull('parent_id')
+        ->orderBy('position')
+        ->get();
+}
+

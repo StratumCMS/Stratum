@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\LikeController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\PageController;
@@ -33,7 +36,13 @@ Route::middleware(['check.installation', LoadActiveTheme::class])->group(functio
 
     Route::get('/', function () {
         return view('theme::home');
-    });
+    })->name('home');
+
+    Route::get('/articles', [ArticleController::class, 'indexPub'])->name('posts.index');
+    Route::get('/articles/{article}', [ArticleController::class, 'show'])->name('posts.show');
+    Route::get('/articles/feed/rss', fn () => response()->view('posts.feed', [
+        'articles' => \App\Models\Article::where('is_published', true)->latest()->take(20)->get()
+    ])->header('Content-Type', 'application/rss+xml'))->name('posts.feed');
 
     Route::prefix('install')->group(function () {
         Route::get('/', [InstallController::class, 'step1'])->name('install.step1');
@@ -60,6 +69,11 @@ Route::middleware(['check.installation', LoadActiveTheme::class])->group(functio
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+        Route::post('/articles/{article}/comments', [CommentController::class, 'store'])->name('comments.store');
+        Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+
+        Route::post('/articles/{article}/like', [LikeController::class, 'toggle'])->name('articles.like');
     });
 
     Route::middleware([LoadActiveTheme::class])->group(function () {

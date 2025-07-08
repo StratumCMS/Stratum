@@ -3,18 +3,24 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\NavbarElementController;
 use App\Http\Middleware\LoadActiveTheme;
 use App\Http\Middleware\PreviewTheme;
 
 Route::middleware(['check.installation', 'auth', 'can:access_dashboard', 'restrict.ip'])->prefix('admin')->group(function () {
     Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    Route::get('/articles', [AdminController::class, 'articles'])->name('admin.articles');
+    Route::get('/articles', [ArticleController::class, 'index'])->name('admin.articles');
+    Route::get('/articles/create', [ArticleController::class, 'create'])->name('admin.articles.create');
+    Route::post('/articles', [ArticleController::class, 'store'])->name('admin.articles.store');
+    Route::post('/articles/{article}/toggle', [ArticleController::class, 'togglePublish'])->name('admin.articles.toggle');
+    Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])->name('admin.articles.delete');
     Route::get('/media', [MediaController::class, 'index'])->name('admin.media');
     Route::post('/media/upload', [MediaController::class, 'upload'])->name('admin.media.upload');
     Route::delete('/media/{mediaItem}', [MediaController::class, 'delete'])->name('admin.media.delete');
@@ -24,6 +30,9 @@ Route::middleware(['check.installation', 'auth', 'can:access_dashboard', 'restri
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
     Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
     Route::post('/settings', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
+
+    Route::resource('/navbar', NavbarElementController::class)->except(['show']);
+    Route::post('/navbar/reorder', [NavbarElementController::class, 'reorder'])->name('navbar.reorder');
 
     Route::get('/visitors/data/{days}', [AdminController::class, 'visitorData']);
 
@@ -59,4 +68,8 @@ Route::middleware(['check.installation', 'auth', 'can:access_dashboard', 'restri
     Route::get('{user}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
     Route::put('{user}', [UserController::class, 'update'])->name('admin.users.update');
     Route::delete('{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
+
+    Route::get('/profile', [ProfileController::class, 'adminEdit'])->name('admin.profile');
+    Route::post('/profile/update', [ProfileController::class, 'updateAdmin'])->name('admin.profile.update');
+
 });

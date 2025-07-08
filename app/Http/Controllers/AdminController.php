@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Article;
 use App\Models\Module;
 use App\Models\Page;
 use App\Models\Role;
@@ -12,6 +13,7 @@ use App\Models\User;
 use App\Models\Visit;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class AdminController extends Controller
 {
@@ -20,6 +22,7 @@ class AdminController extends Controller
         $userCount = User::count();
         $themeCount = Theme::count();
         $moduleCount = Module::where('active', true)->count();
+        $articlesPublished = Article::where('is_published', true)->count();
 
         $visitors30d = Visit::where('visited_at', '>=', now()->subDays(30))->count();
         $visitorsPrev30d = Visit::whereBetween('visited_at', [now()->subDays(60), now()->subDays(31)])->count();
@@ -37,7 +40,6 @@ class AdminController extends Controller
 
         $pageViewsChange = $previousViews > 0 ? round((($currentViews - $previousViews) / $previousViews) * 100, 1) : 0;
 
-        $articlesPublished = 156;
         $articlesChange = -2.1;
 
         $stats = [
@@ -105,11 +107,6 @@ class AdminController extends Controller
         return response()->json($data);
     }
 
-    public function articles()
-    {
-        return view('admin.article');
-    }
-
     public function themePage()
     {
         $themes = Theme::all();
@@ -169,7 +166,10 @@ class AdminController extends Controller
 
     public function settings()
     {
-        return view('admin.settings');
+        $mediaItems = Media::latest()->take(50)->get();
+        return view('admin.settings', [
+            'mediaItems' => $mediaItems
+        ]);
     }
 
     public function updateSettings(Request $request)
@@ -221,6 +221,7 @@ class AdminController extends Controller
 
         return redirect()->route('admin.settings')->with('success', 'Paramètres mis à jour avec succès.');
     }
+
 
 
 
