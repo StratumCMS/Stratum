@@ -1,6 +1,6 @@
 # Stratum CMS
 
-**Stratum** est un CMS universel, modulaire, et open source, développé avec **Laravel 11**. Conçu pour répondre aux besoins variés des utilisateurs (entreprises, particuliers, institutions, développeurs), Stratum se distingue par sa légèreté, sa flexibilité, et son optimisation.
+**Stratum** est un CMS universel, modulaire, et open source, développé avec **Laravel 10**. Conçu pour répondre aux besoins variés des utilisateurs (entreprises, particuliers, institutions, développeurs), Stratum se distingue par sa légèreté, sa flexibilité, et son optimisation.
 
 Avec un système avancé de **thèmes** et **modules**, Stratum permet de créer des sites web vitrines, portfolios, blogs, e-commerces, et bien plus, tout en restant facile à utiliser et à personnaliser.
 
