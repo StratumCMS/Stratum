@@ -7,9 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="@yield('description', setting('description', ''))">
 
-    <link href="{{ theme_asset('css/main.css') }}" rel="stylesheet">
+    <link href="{{ theme_asset('css/output.css') }}" rel="stylesheet">
     <link href="{{ theme_asset('css/custom.css') }}" rel="stylesheet">
-    <script src="{{ theme_asset('js/script.js') }}" defer></script>
 
     <meta property="og:title" content="@yield('title')">
     <meta property="og:type" content="@yield('type', 'website')">
@@ -19,13 +18,20 @@
     <meta property="og:site_name" content="{{ site_name() }}">
     @stack('meta')
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <link rel="shortcut icon" href="{{ favicon() }}">
+
+    @stack('scripts')
+
+    @stack('styles')
 </head>
 <body>
-@include('theme::partials.header')
+<header>
+    @include('theme::partials.header')
+</header>
 
-<main>
-    @yield('content')
-</main>
+@yield('content')
 
 @include('theme::partials.footer')
 <script src="https://unpkg.com/alpinejs" defer></script>

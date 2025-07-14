@@ -55,7 +55,9 @@
             <div class="rounded-lg border bg-card text-card-foreground shadow-sm hover-lift hover-glow-purple transition-all">
                 @php
                     $active = $themes->firstWhere('active', true);
-                    $hasConfig = File::exists(resource_path("themes/{$active->slug}/config/rules.php"));
+                    if ($active){
+                        $hasConfig = File::exists(resource_path("themes/{$active->slug}/config/rules.php"));
+                    }
                 @endphp
 
                 @if($active)
@@ -89,6 +91,12 @@
                                         <i class="fas fa-cog w-4 h-4 mr-1"></i> Personnaliser
                                     </a>
                                 @endif
+                                    <form action="{{ route('themes.deactivate', $active->slug) }}" method="POST">
+                                        @csrf
+                                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3">
+                                            <i class="fa-solid fa-eye-slash w-4 h-4 mr-1"></i> Désactivé
+                                        </button>
+                                    </form>
                                 <a href="/?preview={{$active->slug}}" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3"><i class="fas fa-eye w-4 h-4 mr-1"></i>Prévisualiser</a>
                             </div>
                         </div>

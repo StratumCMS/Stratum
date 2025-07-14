@@ -42,6 +42,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\TrackVisitor::class,
             \App\Http\Middleware\MaintenanceMode::class,
             \App\Http\Middleware\LimitLoginAttempts::class,
+            \App\Http\Middleware\Ensure2FAIsVerified::class
         ],
 
         'api' => [

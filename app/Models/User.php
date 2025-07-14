@@ -24,6 +24,11 @@ class User extends Authenticatable
         'status',
         'last_login_at',
         'avatar_url',
+        'bio',
+        'location',
+        'website',
+        'social_links',
+        'backup_codes',
     ];
 
     /**
@@ -34,6 +39,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'google2fa_secret',
+        'backup_codes',
     ];
 
     /**
@@ -45,6 +52,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'last_login_at' => 'datetime',
+        'two_factor_enabled' => 'boolean',
+        'social_links' => 'array',
     ];
 
     public function roles(){
@@ -65,8 +74,34 @@ class User extends Authenticatable
         return $this->permissions()->contains('name', $permission);
     }
 
+    public function hasAdminAccess(): bool
+    {
+        return $this->can('access_dashboard');
+    }
+
+    public function articles()
+    {
+        return $this->hasMany(Article::class);
+    }
+
+
     public function likedArticles()
     {
         return $this->belongsToMany(Article::class, 'likes')->withTimestamps();
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function hasPassed2FA(): bool
+    {
+        return session()->get('2fa_verified') === true;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role->is_admin;
     }
 }

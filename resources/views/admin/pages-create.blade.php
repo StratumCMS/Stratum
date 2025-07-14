@@ -75,7 +75,7 @@
                 <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
                     <div class="flex flex-col space-y-1.5 p-6"><h2 class="text-2xl font-semibold leading-none tracking-tight">Contenu</h2></div>
                     <div class="p-6 pt-0 space-y-4">
-                        <textarea name="content" id="tinymce" class="tinymce" required>{{ old('content') }}</textarea>
+                        <textarea name="content" id="tinymce" class="tinymce">{{ old('content') }}</textarea>
                         @error('content')<p class="text-destructive text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
                 </div>

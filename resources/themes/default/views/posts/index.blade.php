@@ -36,7 +36,7 @@
                             <div class="p-6">
                                 <div class="flex items-center text-sm text-slate-400 mb-2">
                                     <span class="bg-blue-500 bg-opacity-20 text-white px-2 py-1 rounded-full text-xs">
-                                        {{ $post->user_id->name }}
+                                        {{ $post->author->name }}
                                     </span>
                                     <span class="mx-2">•</span>
                                     <span>{{ format_date($post->published_at) }}</span>

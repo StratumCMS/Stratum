@@ -6,6 +6,9 @@ use App\Models\Theme;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\URL;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -50,5 +53,26 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with(compact('navigationItems', 'moduleNavigationItems'));
         });
+
+
+        if (Schema::hasTable('settings')) {
+
+            $appUrl = setting('site_url');
+            if ($appUrl) {
+                Config::set('app.url', $appUrl);
+                URL::forceRootUrl($appUrl);
+            }
+
+            Config::set('mail.mailers.smtp.host', setting('mail.host'));
+            Config::set('mail.mailers.smtp.port', setting('mail.port'));
+            Config::set('mail.mailers.smtp.encryption', setting('mail.encryption'));
+            Config::set('mail.mailers.smtp.username', setting('mail.username'));
+            Config::set('mail.mailers.smtp.password', setting('mail.password'));
+
+            Config::set('mail.default', setting('mail.driver', 'smtp'));
+            Config::set('mail.from.address', setting('mail.from_address'));
+            Config::set('mail.from.name', setting('mail.from_name'));
+        }
+
     }
 }

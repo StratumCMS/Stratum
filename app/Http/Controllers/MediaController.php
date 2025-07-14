@@ -22,7 +22,7 @@ class MediaController extends Controller
     public function upload(Request $request, ImageOptimizerService $optimizer)
     {
         $request->validate([
-            'media' => 'required|file|mimes:jpeg,png,jpg,gif,svg,webp,mp4,webm,pdf,doc,docx|max:10240',
+            'media' => 'required|file|mimes:jpeg,png,jpg,gif,svg,webp,mp4,webm,ico|max:10240',
             'name' => 'nullable|string|max:255'
         ]);
 

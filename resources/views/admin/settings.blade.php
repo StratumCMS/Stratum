@@ -3,7 +3,7 @@
 @section('title', 'Paramètres')
 
 @section('content')
-    <div class="max-w-4xl mx-auto" x-data>
+    <div class="max-w-4xl mx-auto" x-data="mediaSelector()">
         @if (session('success'))
             <div class="mb-6 p-4 bg-green-100 text-green-800 rounded-lg border border-green-300 shadow">
                 <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
@@ -24,7 +24,6 @@
             @csrf
 
             <div x-data="{ tab: 'general' }" class="space-y-8">
-                {{-- Tabs --}}
                 <div class="flex flex-wrap justify-start gap-2 border-b pb-2 mb-4">
                     <template x-for="tabInfo in [
                         { key: 'general', label: 'Général', icon: 'fas fa-cog' },
@@ -48,59 +47,58 @@
                     </template>
                 </div>
 
-                {{-- Onglet Général --}}
                 <div x-show="tab === 'general'" class="flex flex-col p-6 rounded-lg border bg-card text-card-foreground shadow-sm space-y-5 hover-glow-purple" x-data="{ maintenanceChecked: {{ setting('maintenance_mode') ? 'true' : 'false' }} }">
                     <x-setting.title icon="fas fa-cog" label="Paramètres généraux" />
                     <x-setting.input name="site_name" label="Nom du site" :value="setting('site_name')" />
+                    <x-setting.input name="site_url" label="URL du site" :value="setting('site_url', config('app.url'))" />
                     <x-setting.textarea name="site_description" label="Description" :value="setting('site_description')" />
                     <x-setting.input name="site_keywords" label="Mots-clés" :value="setting('site_keywords')" />
 
-                    {{-- Logo --}}
-                    <div x-data="mediaSelector('site_logo', '{{ setting('site_logo') }}')" class="space-y-2">
+                    <div class="space-y-2">
                         <x-setting.label text="Logo du site" />
-                        <template x-if="previewUrl">
+                        <template x-if="site_logo">
                             <div class="relative w-40">
-                                <img :src="previewUrl" class="rounded border shadow-sm">
-                                <button type="button" @click="clear()" class="btn btn-destructive btn-sm absolute top-1 right-1">
+                                <img :src="site_logo" class="rounded border shadow-sm">
+                                <button type="button" @click="clear('site_logo')" class="btn btn-destructive btn-sm absolute top-1 right-1">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
                         </template>
-                        <button type="button" @click="open()" class="btn btn-outline">
+                        <button type="button" @click="openModal('site_logo')" class="btn btn-outline">
                             <i class="fas fa-image mr-2"></i> Choisir le logo
                         </button>
-                        <input type="hidden" :name="field" :value="selectedUrl">
+                        <input type="hidden" name="site_logo" :value="site_logo">
                     </div>
 
-                    {{-- Favicon --}}
-                    <div x-data="mediaSelector('site_favicon', '{{ setting('site_favicon') }}')" class="space-y-2">
+                    <div class="space-y-2">
                         <x-setting.label text="Favicon" />
-                        <template x-if="previewUrl">
+                        <template x-if="site_favicon">
                             <div class="relative w-16">
-                                <img :src="previewUrl" class="rounded border shadow-sm">
-                                <button type="button" @click="clear()" class="btn btn-destructive btn-sm absolute top-1 right-1">
+                                <img :src="site_favicon" class="rounded border shadow-sm">
+                                <button type="button" @click="clear('site_favicon')" class="btn btn-destructive btn-sm absolute top-1 right-1">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
                         </template>
-                        <button type="button" @click="open()" class="btn btn-outline">
+                        <button type="button" @click="openModal('site_favicon')" class="btn btn-outline">
                             <i class="fas fa-image mr-2"></i> Choisir le favicon
                         </button>
-                        <input type="hidden" :name="field" :value="selectedUrl">
+                        <input type="hidden" name="site_favicon" :value="site_favicon">
                     </div>
 
                     <div @change="maintenanceChecked = $event.target.checked">
                         <x-setting.toggle name="maintenance_mode" label="Mode maintenance" description="Désactiver temporairement l'accès public" :checked="setting('maintenance_mode')" />
                     </div>
 
-                    {{-- Détails maintenance --}}
                     <div x-show="maintenanceChecked" x-cloak class="mt-4 space-y-4 border-t pt-4">
                         <x-setting.input name="maintenance_title" label="Titre de la page de maintenance" :value="setting('maintenance_title', 'Site en maintenance')" />
                         <x-setting.textarea name="maintenance_message" label="Message de maintenance" :value="setting('maintenance_message', 'Nous sommes actuellement en maintenance. Merci de revenir plus tard.')" />
                     </div>
+
+                    <x-setting.input name="copyright" label="Copyright" :value="setting('copyright')" />
+                    <x-setting.input name="site_key" label="Clé license" :value="setting('site_key')" />
                 </div>
 
-                {{-- Onglets restants --}}
                 <div x-show="tab === 'seo'" x-cloak class="flex flex-col p-6 rounded-lg border bg-card text-card-foreground shadow-sm space-y-5 hover-glow-purple">
                     <x-setting.title icon="fas fa-search" label="Référencement (SEO)" />
                     <x-setting.toggle name="seo_enabled" label="SEO activé" description="Activer les options SEO"
@@ -134,7 +132,6 @@
                                           :checked="setting('ip_whitelist')" />
                     </div>
 
-                    {{-- Manager IPs --}}
                     <div x-show="whitelistEnabled" x-cloak class="mt-4 space-y-4 border-t pt-4">
                         <x-setting.label text="Adresse IP à ajouter" />
 
@@ -178,9 +175,64 @@
                             </ul>
                         </template>
 
-                        {{-- Important : encodage JSON des IPs --}}
                         <input type="hidden" name="ip_whitelist_list" :value="JSON.stringify(ips)">
                     </div>
+
+                    <div x-data="{ captchaEnabled: {{ setting('captcha_enabled') ? 'true' : 'false' }} }">
+                        <div @change="captchaEnabled = $event.target.checked">
+                            <x-setting.toggle
+                                name="captcha_enabled"
+                                label="Activer CAPTCHA"
+                                description="Protéger les formulaires avec un système CAPTCHA"
+                                :checked="setting('captcha_enabled')"
+                            />
+                        </div>
+
+                        <div x-show="captchaEnabled" x-cloak class="mt-4 space-y-4 border-t pt-4">
+                            <x-setting.select name="captcha.type" label="Type de CAPTCHA" :value="setting('captcha_type', 'recaptcha')">
+                                <option value="recaptcha">Google reCAPTCHA</option>
+                                <option value="hcaptcha">hCaptcha</option>
+                                <option value="turnstile">Cloudflare Turnstile</option>
+                            </x-setting.select>
+
+                            <x-setting.input name="captcha.site_key" label="Site Key" :value="setting('captcha_site_key')" />
+                            <x-setting.input name="captcha.secret_key" label="Clé secrète" :value="setting('captcha_secret_key')" />
+                        </div>
+                    </div>
+
+                    <div x-data="{ emailEnabled: {{ setting('email_enabled') ? 'true' : 'false' }} }">
+                        <div @change="emailEnabled = $event.target.checked">
+                            <x-setting.toggle
+                                name="email_enabled"
+                                label="Activer les e-mails"
+                                description="Permet d'envoyer des e-mails via SMTP ou un service tiers"
+                                :checked="setting('email_enabled')" />
+                        </div>
+
+                        <div x-show="emailEnabled" x-cloak class="space-y-4 border-t pt-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <x-setting.select name="mail.driver" label="Driver" :value="setting('mail_driver')">
+                                    <option value="smtp">SMTP</option>
+                                    <option value="sendmail">Sendmail</option>
+                                    <option value="mailgun">Mailgun</option>
+                                    <option value="sendgrid">SendGrid</option>
+                                </x-setting.select>
+
+                                <x-setting.input name="mail.host" label="Hôte SMTP" :value="setting('mail_host')" />
+                                <x-setting.input name="mail.port" label="Port" :value="setting('mail_port')" />
+                                <x-setting.input name="mail.encryption" label="Chiffrement (tls/ssl)" :value="setting('mail_encryption')" />
+                                <x-setting.input name="mail.username" label="Nom d'utilisateur" :value="setting('mail_username')" />
+                                <x-setting.input name="mail.password" label="Mot de passe" :value="setting('mail_password')" type="password" />
+                                <x-setting.input name="mail.from_address" label="Email expéditeur" :value="setting('mail_from_address')" />
+                                <x-setting.input name="mail.from_name" label="Nom expéditeur" :value="setting('mail_from_name')" />
+                            </div>
+
+                        </div>
+                    </div>
+
+
+
+
                 </div>
 
                 <div x-show="tab === 'notifications'" x-cloak class="flex flex-col p-6 rounded-lg border bg-card text-card-foreground shadow-sm space-y-5 hover-glow-purple">
@@ -224,67 +276,65 @@
             </div>
         </form>
 
-        {{-- Modal Bibliothèque Média --}}
-        <div x-show="$store.mediaModal.modalOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50" x-cloak>
-            <div class="bg-card rounded-lg max-w-3xl w-full p-6 space-y-4" @click.away="$store.mediaModal.close()">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-semibold">Bibliothèque de médias</h2>
-                    <button @click="$store.mediaModal.close()" class="text-muted-foreground"><i class="fas fa-times"></i></button>
+            <div x-show="modalOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50">
+                <div class="bg-card rounded-lg max-w-3xl w-full p-6 space-y-4" @click.away="closeModal()">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-semibold">Bibliothèque de médias</h2>
+                        <button @click="closeModal()" class="text-muted-foreground"><i class="fas fa-times"></i></button>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-4 overflow-y-auto max-h-80">
+                        <template x-for="media in mediaItems" :key="media.id">
+                            <div @click="selectMedia(media)" class="cursor-pointer border hover:bg-muted/10 p-1 rounded">
+                                <img :src="media.url" class="w-full h-20 object-cover rounded">
+                            </div>
+                        </template>
+                    </div>
                 </div>
-                <div class="grid grid-cols-4 gap-4 overflow-y-auto max-h-80">
-                    @foreach($mediaItems as $media)
-                        <div @click="$store.mediaModal.select({ url: '{{ $media->getUrl() }}' })" class="cursor-pointer border hover:bg-muted/10 p-1 rounded">
-                            <img src="{{ $media->getUrl() }}" class="w-full h-20 object-cover rounded">
-                        </div>
-                    @endforeach
-                </div>
-                <a href="{{ route('admin.media') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-white hover:bg-primary/90 transition shadow">
-                    Uploader un média
-                </a>
             </div>
-        </div>
     </div>
 @endsection
 
 @push('scripts')
     <script src="https://unpkg.com/alpinejs" defer></script>
     <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.store('mediaModal', {
-                modalOpen: false,
-                callback: null,
-                open(callback) {
-                    this.modalOpen = true;
-                    this.callback = callback;
-                },
-                close() {
-                    this.modalOpen = false;
-                    this.callback = null;
-                },
-                select(media) {
-                    if (this.callback) this.callback(media);
-                    this.close();
-                }
-            });
-        });
-
-        function mediaSelector(field, initialValue = '') {
+        function mediaSelector() {
             return {
-                field,
-                selectedUrl: initialValue,
-                previewUrl: initialValue,
-                open() {
-                    Alpine.store('mediaModal').open(this.select.bind(this));
+                modalOpen: false,
+                mediaItems: @json($mediaItems),
+                activeField: null,
+
+                site_logo: '{{ setting('site_logo') }}',
+                site_favicon: '{{ setting('site_favicon') }}',
+
+                openModal(field) {
+                    this.activeField = field;
+                    this.modalOpen = true;
                 },
-                select(media) {
-                    this.selectedUrl = media.url;
-                    this.previewUrl = media.url;
+
+                closeModal() {
+                    this.modalOpen = false;
+                    this.activeField = null;
                 },
-                clear() {
-                    this.selectedUrl = '';
-                    this.previewUrl = '';
+
+                selectMedia(media) {
+                    if (this.activeField === 'site_logo') {
+                        this.site_logo = media.url;
+                    } else if (this.activeField === 'site_favicon') {
+                        this.site_favicon = media.url;
+                    }
+                    this.closeModal();
+                },
+
+                clear(field) {
+                    if (field === 'site_logo') {
+                        this.site_logo = '';
+                    } else if (field === 'site_favicon') {
+                        this.site_favicon = '';
+                    }
                 }
             }
         }
     </script>
 @endpush
+

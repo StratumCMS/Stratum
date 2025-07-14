@@ -166,7 +166,11 @@ class AdminController extends Controller
 
     public function settings()
     {
-        $mediaItems = Media::latest()->take(50)->get();
+        $mediaItems = Media::latest()->get()->map(fn($m) => [
+            'id' => $m->id,
+            'url' => $m->hasGeneratedConversion('thumb') ? $m->getFullUrl('thumb') : $m->getFullUrl(),
+        ]);
+
         return view('admin.settings', [
             'mediaItems' => $mediaItems
         ]);
@@ -180,7 +184,7 @@ class AdminController extends Controller
             'maintenance_mode', 'seo_enabled', 'xml_sitemap', 'robots_txt', 'two_factor_auth',
             'login_attempts', 'ip_whitelist', 'email_notifications', 'push_notifications',
             'admin_notifications', 'auto_backup', 'cache_enabled', 'compression_enabled',
-            'image_optimization'
+            'image_optimization', 'captcha.enabled', 'email_enabled'
         ];
 
         foreach ($booleanFields as $field) {

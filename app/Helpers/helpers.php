@@ -35,6 +35,13 @@ if (!function_exists('theme_asset')) {
     }
 }
 
+if (!function_exists('theme_config')) {
+    function theme_config(?string $key = null, mixed $default = null): mixed
+    {
+        return $key === null ? config('theme') : config('theme.'.$key, $default);
+    }
+}
+
 if (!function_exists('format_date')) {
     function format_date($date, $format = 'd M Y') {
         return $date ? \Carbon\Carbon::parse($date)->translatedFormat($format) : '';
@@ -65,7 +72,7 @@ if (!function_exists('favicon')) {
 
 function get_navigation_items()
 {
-    return \App\Models\NavbarElement::with(['children' => fn($q) => $q->orderBy('position')])
+    return \App\Models\NavbarElement::with(['elements' => fn($q) => $q->orderBy('position')])
         ->whereNull('parent_id')
         ->orderBy('position')
         ->get();

@@ -7,7 +7,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="author" content="StratumCMS">
 
-        <title>@yield('title', 'StratumCMS')</title>
+        <title>@yield('title') | {{ site_name() }}</title>
         <meta property="og:title" content="@yield('title')">
         <meta property="og:type" content="@yield('type', 'website')">
         <meta property="og:url" content="{{ url()->current() }}">
@@ -21,27 +21,39 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <link href="{{ asset('build/assets/app-Bp7TMlvl.css') }}" rel="stylesheet">
+        <link href="{{ asset('build/assets/default.css') }}" rel="stylesheet">
 
         @stack('scripts')
     </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <body class="min-h-screen transition-colors duration-300 dark:bg-slate-900 bg-gray-50">
             @include('layouts.navigation')
-
-            @if (isset($header))
-                <header class="bg-white dark:bg-gray-800 shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endif
-
-            <main>
+            <main class="flex-1 container mx-auto px-4 py-8">
                 @yield('content')
             </main>
-        </div>
+    @include('elements.footer')
     </body>
     <script src="https://kit.fontawesome.com/91664c67de.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('darkMode', {
+                enabled: localStorage.getItem('darkMode') === 'true',
+                toggle() {
+                    this.enabled = !this.enabled;
+                    localStorage.setItem('darkMode', this.enabled);
+                    document.documentElement.classList.toggle('dark', this.enabled);
+                },
+                init() {
+                    document.documentElement.classList.toggle('dark', this.enabled);
+                }
+            });
+        });
+
+        (function () {
+            try {
+                const theme = localStorage.getItem('stratum-theme') || 'dark';
+                document.documentElement.classList.add(theme);
+            } catch (e) {}
+        })();
+    </script>
 </html>

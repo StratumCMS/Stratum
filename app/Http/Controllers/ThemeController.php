@@ -117,16 +117,6 @@ class ThemeController extends Controller
         return back()->with('success', 'Thème mis à jour avec succès.');
     }
 
-    public static function activateDefaultTheme(){
-        $activeTheme = Theme::where('active', true)->first();
-        if (!$activeTheme) {
-            $defaultTheme = Theme::where('slug', 'default')->first();
-            if ($defaultTheme) {
-                $defaultTheme->update(['active' => true]);
-            }
-        }
-    }
-
     public function customize($slug)
     {
         $theme = Theme::where('slug', $slug)->firstOrFail();

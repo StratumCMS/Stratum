@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ModuleController;
@@ -11,6 +13,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ThemeController;
+use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\LoadActiveTheme;
 use App\Http\Middleware\PreviewTheme;
@@ -34,9 +37,7 @@ require __DIR__.'/admin.php';
 
 Route::middleware(['check.installation', LoadActiveTheme::class])->group(function () {
 
-    Route::get('/', function () {
-        return view('theme::home');
-    })->name('home');
+    Route::get('/', [HomeController::class, 'index'])->name('home');
 
     Route::get('/articles', [ArticleController::class, 'indexPub'])->name('posts.index');
     Route::get('/articles/{article}', [ArticleController::class, 'show'])->name('posts.show');
@@ -66,7 +67,8 @@ Route::middleware(['check.installation', LoadActiveTheme::class])->group(functio
     })->middleware(['auth', 'verified'])->name('dashboard');
 
     Route::middleware('auth')->group(function () {
-        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+        Route::get('/profile/settings', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
@@ -74,11 +76,15 @@ Route::middleware(['check.installation', LoadActiveTheme::class])->group(functio
         Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
         Route::post('/articles/{article}/like', [LikeController::class, 'toggle'])->name('articles.like');
+        Route::get('/2fa', [TwoFactorChallengeController::class, 'show'])->name('2fa.challenge');
+        Route::post('/2fa', [TwoFactorChallengeController::class, 'store'])->name('2fa.verify.challenge');;
+        Route::post('/2fa/enable', [TwoFactorController::class, 'enable'])->name('2fa.enable');
+        Route::post('/2fa/verify', [TwoFactorController::class, 'verify'])->name('2fa.verify');
+        Route::delete('/2fa/disable', [TwoFactorController::class, 'disable'])->name('2fa.disable');
     });
 
-    Route::middleware([LoadActiveTheme::class])->group(function () {
-        Route::get('/{slug}', [PageController::class, 'show'])->name('pages.show');
-    });
+    Route::get('/profile/{name}', [ProfileController::class, 'show'])->name('profile.show');
 
+    Route::get('/{slug}', [PageController::class, 'show'])->name('pages.show');
 
 });

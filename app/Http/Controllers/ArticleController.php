@@ -41,18 +41,49 @@ class ArticleController extends Controller
         return view('admin.articles', compact('articles', 'availableTypes', 'stats'));
     }
 
-    public function indexPub()
+    public function indexPub(Request $request)
     {
-        $posts = Article::where('is_published', true)
+        $baseQuery = Article::with('author')
+            ->where('is_published', true)
             ->where(function ($q) {
-                $q->where('published_at', '<=', now())
-                    ->orWhereNull('published_at');
-            })
-            ->latest()
-            ->paginate(10);
+                $q->whereDate('published_at', '<=', now())->orWhereNull('published_at');
+            });
 
-        return view('theme::posts.index', compact('posts'));
+        $featured = (clone $baseQuery)->latest()->take(1)->get();
+
+        $postsQuery = (clone $baseQuery);
+
+        if ($featured->count() === 3) {
+            $postsQuery->whereNotIn('id', $featured->pluck('id'));
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $postsQuery->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%$search%")
+                    ->orWhere('description', 'like', "%$search%")
+                    ->orWhere('content', 'like', "%$search%");
+            });
+        }
+
+        if ($request->filled('type')) {
+            $postsQuery->where('type', $request->input('type'));
+        }
+
+        $posts = $postsQuery->latest()->paginate(9)->withQueryString();
+
+        $types = Article::where('is_published', true)
+            ->where(function ($q) {
+                $q->whereDate('published_at', '<=', now())->orWhereNull('published_at');
+            })
+            ->pluck('type')
+            ->unique()
+            ->filter()
+            ->values();
+
+        return view('posts.index', compact('featured', 'posts', 'types'));
     }
+
 
     public function create()
     {
@@ -62,6 +93,44 @@ class ArticleController extends Controller
         ]);
 
         return view('admin.create-articles', compact('mediaItems'));
+    }
+
+    public function edit(Article $article)
+    {
+        $mediaItems = Media::latest()->get()->map(fn($m) => [
+            'id' => $m->id,
+            'url' => $m->hasGeneratedConversion('thumb') ? $m->getFullUrl('thumb') : $m->getFullUrl(),
+        ]);
+
+        return view('admin.edit-articles', compact('article', 'mediaItems'));
+    }
+
+    public function update(Request $request, Article $article)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string|max:500',
+            'content' => 'required|string',
+            'type' => 'nullable|string|max:100',
+            'tags' => 'nullable|string',
+            'published_at' => 'nullable|date',
+            'is_published' => 'boolean',
+            'thumbnail_media_id' => 'nullable|exists:media,id',
+        ]);
+
+        $article->update($validated);
+        $article->tags = $validated['tags']
+            ? array_filter(array_map('trim', explode(',', $validated['tags'])))
+            : [];
+
+        if ($request->filled('thumbnail_media_id')) {
+            $media = Media::findOrFail($request->input('thumbnail_media_id'));
+            $article->thumbnail = $media->getFullUrl();
+        }
+
+        $article->save();
+
+        return redirect()->route('admin.articles')->with('success', 'Article mis à jour avec succès.');
     }
 
     public function store(Request $request)
@@ -97,7 +166,12 @@ class ArticleController extends Controller
     public function show(Article $article)
     {
         abort_unless($article->is_published, 404);
-        return view('posts.show', compact('article'));
+        $relatedArticles = Article::where('type', $article->type)
+            ->where('id', '!=', $article->id)
+            ->latest()
+            ->take(3)
+            ->get();
+        return view('posts.show', compact('article', 'relatedArticles'));
     }
 
     public function togglePublish(Article $article)

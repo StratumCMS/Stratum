@@ -24,6 +24,22 @@
                     </div>
                 </div>
             @endforeach
+
+                @foreach($cards ?? [] as $card)
+                    <div class="rounded-lg border bg-card text-card-foreground shadow-sm hover-lift hover-glow-purple transition-all duration-300">
+                        <div class="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
+                            <div class="text-sm font-medium text-muted-foreground">
+                                {{ $card['name'] }}
+                            </div>
+                            <div class="{{ $stat['color'] }} text-white w-8 h-8 rounded-lg flex items-center justify-center glow-purple">
+                                <i class="fas {{ $stat['icon'] }} w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <div class="p-6 pt-0">
+                            <div class="text-2xl font-bold text-glow-purple">{{ $card['value'] }}</div>
+                        </div>
+                    </div>
+                @endforeach
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

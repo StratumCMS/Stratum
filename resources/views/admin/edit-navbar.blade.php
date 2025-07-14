@@ -15,14 +15,12 @@
                     @csrf
                     @method('PUT')
 
-                    {{-- Nom --}}
                     <div class="space-y-2">
                         <label for="name" class="text-sm font-medium text-muted-foreground">Nom de l'élément</label>
                         <input type="text" name="name" id="name" class="form-input" value="{{ old('name', $navbar->name) }}" required />
                         @error('name') <p class="text-sm text-destructive">{{ $message }}</p> @enderror
                     </div>
 
-                    {{-- Type --}}
                     <div class="space-y-2">
                         <label for="type" class="text-sm font-medium text-muted-foreground">Type d'élément</label>
                         <select name="type" id="type" x-model="type" class="form-select" required>
@@ -38,22 +36,15 @@
                         @error('type') <p class="text-sm text-destructive">{{ $message }}</p> @enderror
                     </div>
 
-                    {{-- Icône --}}
                     <div class="space-y-2">
                         <label for="icon" class="text-sm font-medium text-muted-foreground">Icône</label>
-                        <select name="icon" id="icon" class="form-select" required>
-                            @foreach(['home' => 'Accueil', 'external-link' => 'Lien externe', 'list' => 'Liste', 'chevron-down' => 'Chevron bas'] as $val => $label)
-                                <option value="{{ $val }}" @selected(old('icon', $navbar->icon) === $val)>{{ $label }}</option>
-                            @endforeach
-                        </select>
+                        <input name="icon" id="icon" type="text" class="form-input bg-muted" value="{{ old('icon', $navbar->icon) }}" placeholder="Sélectionner un favicon"/>
                         @error('icon') <p class="text-sm text-destructive">{{ $message }}</p> @enderror
                     </div>
 
-                    {{-- URL / Cible --}}
                     <div class="space-y-2">
                         <label for="value" class="text-sm font-medium text-muted-foreground">URL / Cible</label>
 
-                        {{-- Home --}}
                         <template x-if="type === 'home'">
                             <input type="text" disabled class="form-input bg-muted cursor-not-allowed" value="/" />
                         </template>
@@ -63,7 +54,6 @@
                             <input type="url" name="value" class="form-input" placeholder="https://..." value="{{ old('value', $navbar->type === 'external_link' ? $navbar->value : '') }}" />
                         </template>
 
-                        {{-- Module --}}
                         <template x-if="type === 'module'">
                             <select name="value" class="form-select">
                                 @foreach($modules as $module)
@@ -74,7 +64,6 @@
                             </select>
                         </template>
 
-                        {{-- Page --}}
                         <template x-if="type === 'page'">
                             <select name="value" class="form-select">
                                 @foreach($pages as $slug => $title)
@@ -85,7 +74,6 @@
                             </select>
                         </template>
 
-                        {{-- Post --}}
                         <template x-if="type === 'post'">
                             <select name="value" class="form-select">
                                 @foreach($articles as $id => $title)
@@ -96,12 +84,12 @@
                             </select>
                         </template>
 
-                        {{-- Post list --}}
                         <template x-if="type === 'posts_list'">
-                            <input type="text" disabled class="form-input bg-muted cursor-not-allowed" value="/articles" />
+                            <input type="text" class="form-input bg-muted cursor-not-allowed" name="value" value="{{ old('value', '/articles') }}" />
                         </template>
 
-                        {{-- Dropdown --}}
+
+
                         <template x-if="type === 'dropdown'">
                             <input type="text" disabled class="form-input bg-muted cursor-not-allowed" value="Conteneur pour sous-menus" />
                         </template>
@@ -109,7 +97,6 @@
                         @error('value') <p class="text-sm text-destructive">{{ $message }}</p> @enderror
                     </div>
 
-                    {{-- Parent --}}
                     <template x-if="type !== 'dropdown'">
                         <div class="space-y-2">
                             <label for="parent_id" class="text-sm font-medium text-muted-foreground">Menu parent</label>
@@ -125,7 +112,6 @@
                         </div>
                     </template>
 
-                    {{-- Boutons --}}
                     <div class="flex justify-end space-x-4">
                         <a href="{{ route('navbar.index') }}" class="inline-flex items-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
                             Annuler

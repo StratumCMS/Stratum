@@ -23,6 +23,15 @@ class Article extends Model implements HasMedia
         'tags' => 'array',
     ];
 
+    public function scopePublished($query)
+    {
+        return $query->where('is_published', true)
+            ->where(function ($q) {
+                $q->whereDate('published_at', '<=', now())->orWhereNull('published_at');
+            });
+    }
+
+
     public function author(){
         return $this->belongsTo(User::class, 'user_id');
     }
@@ -53,4 +62,10 @@ class Article extends Model implements HasMedia
             ->sharpen(10)
             ->nonQueued();
     }
+
+    public function thumbnail()
+    {
+        return $this->thumbnail ?? 'https://placehold.co/600x400?text=Sans+image';
+    }
+
 }

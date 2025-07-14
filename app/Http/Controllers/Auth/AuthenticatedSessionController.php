@@ -33,6 +33,10 @@ class AuthenticatedSessionController extends Controller
             'last_login_at' => now(),
         ]);
 
+        if (Auth::user()->two_factor_enabled) {
+            return redirect()->route('2fa.challenge');
+        }
+
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 

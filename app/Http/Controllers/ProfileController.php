@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -60,13 +61,27 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $data = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($request->hasFile('avatar')) {
+            $avatar = $request->file('avatar');
+            if ($user->avatar_url && Storage::disk('public')->exists($user->avatar_url)) {
+                Storage::disk('public')->delete($user->avatar_url);
+            }
+            $path = $avatar->store('avatars', 'public');
+            $data['avatar_url'] = Storage::url($path);
         }
 
-        $request->user()->save();
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        if (isset($data['social_links']) && is_array($data['social_links'])) {
+            $data['social_links'] = array_filter($data['social_links']);
+        }
+
+        $user->update($data);
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -90,5 +105,27 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    public function show($name = null){
+        $user = User::where('name', $name)->orWhere('name', $name)->firstOrFail();
+
+        $articles = $user->articles()->published()->latest()->get();
+        $articlesCount = $articles->count();
+        $likesCount = $user->likedArticles()->count();
+        $followersCount = 0;
+
+        return view('profile.show', compact('user', 'articles', 'articlesCount', 'likesCount', 'followersCount'));
+    }
+
+    public function index(){
+        $user = auth()->user();
+
+        $articles = $user->articles()->published()->latest()->get();
+        $articlesCount = $articles->count();
+        $likesCount = $user->likedArticles()->count();
+        $followersCount = 0;
+
+        return view('profile.index', compact('user', 'articles', 'articlesCount', 'likesCount', 'followersCount'));
     }
 }

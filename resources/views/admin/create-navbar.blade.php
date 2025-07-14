@@ -38,12 +38,7 @@
 
                     <div class="space-y-2">
                         <label for="icon" class="text-sm font-medium text-muted-foreground">Icône</label>
-                        <select name="icon" id="icon" class="form-select" required>
-                            <option disabled selected value="">Sélectionnez une icône</option>
-                            @foreach(['home' => 'Accueil', 'external-link' => 'Lien externe', 'list' => 'Liste', 'chevron-down' => 'Chevron bas'] as $val => $label)
-                                <option value="{{ $val }}" @selected(old('icon') === $val)>{{ $label }}</option>
-                            @endforeach
-                        </select>
+                        <input name="icon" id="icon" type="text" class="form-input bg-muted" placeholder="Sélectionner un favicon"/>
                         @error('icon') <p class="text-sm text-destructive">{{ $message }}</p> @enderror
                     </div>
 

@@ -18,6 +18,8 @@ Route::middleware(['check.installation', 'auth', 'can:access_dashboard', 'restri
     Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/articles', [ArticleController::class, 'index'])->name('admin.articles');
     Route::get('/articles/create', [ArticleController::class, 'create'])->name('admin.articles.create');
+    Route::get('/articles/{article}/edit', [ArticleController::class, 'edit'])->name('admin.articles.edit');
+    Route::put('/articles/{article}', [ArticleController::class, 'update'])->name('admin.articles.update');
     Route::post('/articles', [ArticleController::class, 'store'])->name('admin.articles.store');
     Route::post('/articles/{article}/toggle', [ArticleController::class, 'togglePublish'])->name('admin.articles.toggle');
     Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])->name('admin.articles.delete');
@@ -30,6 +32,7 @@ Route::middleware(['check.installation', 'auth', 'can:access_dashboard', 'restri
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
     Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
     Route::post('/settings', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
+    Route::post('/settings/test-email', [SettingsTestMailController::class, 'send'])->name('settings.test_email');
 
     Route::resource('/navbar', NavbarElementController::class)->except(['show']);
     Route::post('/navbar/reorder', [NavbarElementController::class, 'reorder'])->name('navbar.reorder');

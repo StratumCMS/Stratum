@@ -40,7 +40,7 @@ class NavbarElement extends Model
 
     public function parent()
     {
-        return $this->belongsTo(self::class, 'parent_id');
+        return $this->belongsTo(NavbarElement::class, 'parent_id');
     }
 
     public function children()
@@ -50,7 +50,7 @@ class NavbarElement extends Model
 
     public function elements()
     {
-        return $this->hasMany(self::class, 'parent_id')->orderBy('position');
+        return $this->hasMany(NavbarElement::class, 'parent_id')->orderBy('position');
     }
 
     public function isDropdown()
@@ -58,14 +58,14 @@ class NavbarElement extends Model
         return $this->type === 'dropdown';
     }
 
-    public function getLink()
+    public function getLink(): string
     {
         return match ($this->type) {
             'home' => route('home'),
             'page' => route('pages.show', $this->value),
             'module' => Route::has($this->value) ? route($this->value) : '#',
-            'post' => route('posts.show', $this->value),
-            'posts' => route('posts.index'),
+            'post' => $this->value && Route::has('posts.show') ? route('posts.show', $this->value) : '#',
+            'posts_link' => $this->value && Route::has('posts.index') ? route('posts.index') : '#',
             'external_link' => $this->value,
             default => '#',
         };
@@ -77,10 +77,10 @@ class NavbarElement extends Model
 
         return match ($this->type) {
             'home' => $request->routeIs('home'),
-            'link' => $request->is($this->value),
+            'external_link' => $request->is($this->value),
             'page' => $request->routeIs('pages.show') && $request->route('path') === $this->value,
             'post' => $request->routeIs('posts.show') && $request->route('post.slug') === $this->value,
-            'posts' => $request->routeIs('posts.*'),
+            'posts_link' => $request->routeIs('posts.*'),
             'module' => $request->routeIs(Str::beforeLast($this->value, '.').'.*'),
             'dropdown' => $this->elements
                 ->contains(
