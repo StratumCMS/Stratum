@@ -39,7 +39,7 @@
 
     {{-- Setup étape 1 + 2 --}}
     <div x-show="setupVisible" x-transition>
-        <div class="border rounded-lg overflow-hidden bg-white shadow">
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
             <div class="p-6 border-b">
                 <h3 class="text-lg font-semibold flex items-center gap-2">
                     <i class="fa-solid fa-qrcode"></i> Étape 1 : Scanner le QR Code
@@ -49,7 +49,7 @@
                 </p>
             </div>
             <div class="p-6 text-center" x-show="qr && secret">
-                <div class="inline-block p-4 bg-white rounded-lg border shadow">
+                <div class="inline-block p-4 bg-card rounded-lg border shadow">
                     <img :src="qr" alt="QR Code pour 2FA" class="w-48 h-48 mx-auto" />
                 </div>
                 <p class="text-sm text-muted-foreground mt-2">
@@ -58,7 +58,7 @@
             </div>
         </div>
 
-        <div class="border rounded-lg overflow-hidden bg-white shadow mt-6">
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
             <div class="p-6 border-b">
                 <h3 class="text-lg font-semibold flex items-center gap-2">
                     <i class="fa-solid fa-mobile-screen-button"></i> Étape 2 : Vérifier le code
@@ -77,12 +77,12 @@
                     pattern="\d{6}"
                     required
                     placeholder="Code à 6 chiffres"
-                    class="w-full px-3 py-2 border rounded-md text-center text-lg tracking-widest"
+                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm text-center tracking-widest"
                 />
                 @error('otp')
                 <p class="text-red-500 text-sm">{{ $message }}</p>
                 @enderror
-                <button type="submit" class="btn-primary w-full">
+                <button type="submit" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
                     <i class="fa-solid fa-check-circle"></i> Vérifier et activer
                 </button>
             </form>
@@ -91,7 +91,7 @@
 
     {{-- Codes de secours --}}
     @if ($user->two_factor_enabled && session('backup_codes'))
-        <div class="border rounded-lg bg-white shadow">
+        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
             <div class="p-6 border-b">
                 <h3 class="text-lg font-semibold">Codes de récupération</h3>
                 <p class="text-sm text-muted-foreground">

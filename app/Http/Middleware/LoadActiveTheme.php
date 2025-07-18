@@ -11,6 +11,10 @@ class LoadActiveTheme
 {
     public function handle($request, Closure $next)
     {
+        if (!file_exists(storage_path('installed'))) {
+            return $next($request);
+        }
+
         $slug = $request->query('preview');
 
         $theme = $slug

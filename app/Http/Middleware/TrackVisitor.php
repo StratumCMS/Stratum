@@ -17,6 +17,11 @@ class TrackVisitor
      */
     public function handle(Request $request, Closure $next): Response
     {
+
+        if (!file_exists(storage_path('installed'))) {
+            return $next($request);
+        }
+
         $ip = $request->ip();
 
         $alreadyVisitedToday = Visit::where('ip', $ip)

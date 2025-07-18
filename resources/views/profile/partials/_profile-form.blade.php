@@ -27,27 +27,27 @@
 
                 <div class="space-y-2 md:col-span-2">
                     <label for="name" class="block text-sm font-medium">Nom d’utilisateur</label>
-                    <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" placeholder="Nom d'utilisateur" class="w-full px-3 py-2 border rounded-md" />
+                    <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" placeholder="Nom d'utilisateur" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" />
                 </div>
 
                 <div class="space-y-2 md:col-span-2">
                     <label for="email" class="block text-sm font-medium">Email</label>
-                    <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" placeholder="votre@email.com" class="w-full px-3 py-2 border rounded-md" />
+                    <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" placeholder="votre@email.com" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" />
                 </div>
 
                 <div class="space-y-2 md:col-span-2">
                     <label for="bio" class="block text-sm font-medium">Bio</label>
-                    <input id="bio" name="bio" type="text" value="{{ old('bio', $user->bio) }}" placeholder="Parlez-nous de vous..." class="w-full px-3 py-2 border rounded-md" />
+                    <input id="bio" name="bio" type="text" value="{{ old('bio', $user->bio) }}" placeholder="Parlez-nous de vous..." class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" />
                 </div>
 
                 <div class="space-y-2">
                     <label for="location" class="block text-sm font-medium">Localisation</label>
-                    <input id="location" name="location" type="text" value="{{ old('location', $user->location) }}" placeholder="Votre ville, pays" class="w-full px-3 py-2 border rounded-md" />
+                    <input id="location" name="location" type="text" value="{{ old('location', $user->location) }}" placeholder="Votre ville, pays" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" />
                 </div>
 
                 <div class="space-y-2">
                     <label for="website" class="block text-sm font-medium">Site web</label>
-                    <input id="website" name="website" type="url" value="{{ old('website', $user->website) }}" placeholder="https://votre-site.com" class="w-full px-3 py-2 border rounded-md" />
+                    <input id="website" name="website" type="url" value="{{ old('website', $user->website) }}" placeholder="https://votre-site.com" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" />
                 </div>
 
                 <div class="space-y-2 md:col-span-2">
@@ -59,7 +59,7 @@
 
                         @foreach($socialLinks as $index => $link)
                             <div class="flex items-center gap-2">
-                                <input type="url" name="social_links[]" value="{{ $link }}" placeholder="https://..." class="w-full px-3 py-2 border rounded-md" />
+                                <input type="url" name="social_links[]" value="{{ $link }}" placeholder="https://..." class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" />
                                 <button type="button" class="remove-social-link px-2 py-1 text-red-600 hover:text-red-800">
                                     <i class="fa-solid fa-xmark"></i>
                                 </button>
@@ -69,7 +69,7 @@
                         {{-- Placeholder if none --}}
                         @if(count($socialLinks) === 0)
                             <div class="flex items-center gap-2">
-                                <input type="url" name="social_links[]" placeholder="https://..." class="w-full px-3 py-2 border rounded-md" />
+                                <input type="url" name="social_links[]" placeholder="https://..." class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" />
                                 <button type="button" class="remove-social-link px-2 py-1 text-red-600 hover:text-red-800">
                                     <i class="fa-solid fa-xmark"></i>
                                 </button>

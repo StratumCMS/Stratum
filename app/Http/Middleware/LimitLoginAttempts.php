@@ -16,6 +16,10 @@ class LimitLoginAttempts
      */
     public function handle(Request $request, Closure $next)
     {
+        if (!file_exists(storage_path('installed'))) {
+            return $next($request);
+        }
+
         if (!setting('login_attempts')) {
             return $next($request);
         }

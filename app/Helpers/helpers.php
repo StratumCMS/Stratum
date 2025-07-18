@@ -4,6 +4,7 @@ use App\Models\NavbarElement;
 use App\Models\Setting;
 use App\Models\Theme;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 if (!function_exists('setting')) {
     function setting($key, $default = null) {
@@ -72,9 +73,26 @@ if (!function_exists('favicon')) {
 
 function get_navigation_items()
 {
+    if (!file_exists(storage_path('installed'))) {
+        return collect();
+    }
     return \App\Models\NavbarElement::with(['elements' => fn($q) => $q->orderBy('position')])
         ->whereNull('parent_id')
         ->orderBy('position')
         ->get();
 }
 
+if (!function_exists('safe_url')) {
+    function safe_url($url)
+    {
+        if (is_string($url) && Str::startsWith($url, ['http://', 'https://', '/'])) {
+            return $url;
+        }
+
+        if ($url instanceof \Illuminate\Contracts\Support\Htmlable || is_object($url)) {
+            return (string) $url;
+        }
+
+        return url($url);
+    }
+}

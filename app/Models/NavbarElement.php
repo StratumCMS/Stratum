@@ -64,8 +64,8 @@ class NavbarElement extends Model
             'home' => route('home'),
             'page' => route('pages.show', $this->value),
             'module' => Route::has($this->value) ? route($this->value) : '#',
-            'post' => $this->value && Route::has('posts.show') ? route('posts.show', $this->value) : '#',
-            'posts_link' => $this->value && Route::has('posts.index') ? route('posts.index') : '#',
+            'post' => route('posts.show', $this->value),
+            'posts_list' => route('posts.index'),
             'external_link' => $this->value,
             default => '#',
         };
@@ -80,7 +80,7 @@ class NavbarElement extends Model
             'external_link' => $request->is($this->value),
             'page' => $request->routeIs('pages.show') && $request->route('path') === $this->value,
             'post' => $request->routeIs('posts.show') && $request->route('post.slug') === $this->value,
-            'posts_link' => $request->routeIs('posts.*'),
+            'posts_list' => $request->routeIs('posts.*'),
             'module' => $request->routeIs(Str::beforeLast($this->value, '.').'.*'),
             'dropdown' => $this->elements
                 ->contains(

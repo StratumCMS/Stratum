@@ -13,6 +13,10 @@ class MaintenanceMode
      */
     public function handle($request, Closure $next): Response
     {
+        if (!file_exists(storage_path('installed'))) {
+            return $next($request);
+        }
+
         $isMaintenance = setting('maintenance_mode');
         $user = auth()->user();
         $isAdmin = $user && $user->roles()->first()?->role === 'admin';

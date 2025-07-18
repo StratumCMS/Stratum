@@ -9,6 +9,10 @@ class Ensure2FAIsVerified
 {
     public function handle(Request $request, Closure $next)
     {
+        if (!file_exists(storage_path('installed'))) {
+            return $next($request);
+        }
+
         $user = $request->user();
 
         if (!$user || !$user->two_factor_enabled) {

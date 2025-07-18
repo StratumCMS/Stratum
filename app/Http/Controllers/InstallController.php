@@ -44,6 +44,7 @@ class InstallController extends Controller
 
         try {
             Artisan::call('migrate', ['--force' => true]);
+            Artisan::call('storage:link');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Erreur lors des migrations : ' . $e->getMessage()]);
         }

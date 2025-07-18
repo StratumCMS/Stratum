@@ -4,19 +4,18 @@ namespace App\Helpers;
 
 use Illuminate\Support\Facades\Http;
 
-class LicenseServer {
-    protected static $apiUrl = 'https://license.velyorix.com/api';
+class LicenseServer
+{
+    protected static string $apiBase = 'http://stratumcom.test/api/v1';
 
     /**
-     * Get paid resources.
-     *
-     * @param string $licenseKey
-     * @return array|null
+     * Récupère la liste des produits liés à une licence.
      */
-    public static function fetchPurchasedResources($licenseKey){
-        $response = Http::post(self::$apiUrl . '/license/resources', [
-            'licenseKey' => $licenseKey
-        ]);
+    public static function getLicensedProducts(string $licenseKey): ?array
+    {
+        $url = self::$apiBase . "/license/{$licenseKey}";
+
+        $response = Http::get($url);
 
         if ($response->successful()) {
             return $response->json();
@@ -26,25 +25,45 @@ class LicenseServer {
     }
 
     /**
-     * Validate resources if paid or not
-     *
-     * @param string $licenseKey
-     * @param string $slug
-     * @param string $type
-     * @return array|null
+     * Vérifie si un produit est accessible via sa licence.
      */
-    public static function validateResource($licenseKey, $slug, $type){
-        $response = Http::post(self::$apiUrl . '/resource/validate', [
-            'license_key' => $licenseKey,
-            'slug' => $slug,
-            'type' => $type,
-        ]);
+    public static function canAccessProduct(string $licenseKey, int $productId): bool
+    {
+        $data = self::getLicensedProducts($licenseKey);
 
-        if ($response->successful()) {
-            return $response->json();
+        if (!$data || empty($data['products'])) {
+            return false;
         }
 
-        return null;
+        return collect($data['products'])->contains(fn ($product) => $product['id'] === $productId);
+    }
+
+    /**
+     * Télécharge un produit donné s'il est accessible.
+     */
+    public static function downloadProduct(int $productId, ?string $licenseKey = null): ?string
+    {
+        $url = self::$apiBase . "/products/{$productId}/download";
+
+        $response = Http::withHeaders([
+            'Accept' => 'application/zip',
+        ])->get($url, [
+            'license' => $licenseKey,
+        ]);
+
+        if (!$response->ok() || $response->header('Content-Type') !== 'application/zip') {
+            return null;
+        }
+
+        $tempDir = storage_path("app/temp");
+        if (!File::exists($tempDir)) {
+            File::makeDirectory($tempDir, 0755, true);
+        }
+
+        $filePath = "{$tempDir}/{$productId}.zip";
+        file_put_contents($filePath, $response->body());
+
+        return $filePath;
     }
 
 }

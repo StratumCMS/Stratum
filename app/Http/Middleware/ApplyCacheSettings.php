@@ -13,9 +13,15 @@ class ApplyCacheSettings
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        if (!setting('cache_enabled')) {
+        if (!file_exists(storage_path('installed'))) {
+            return $next($request);
+        }
+
+        $cacheEnabled = \App\Models\Setting::get('cache_enabled', false);
+
+        if (!$cacheEnabled) {
             config(['cache.default' => 'array']);
         }
 

@@ -20,7 +20,7 @@
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     @auth
                         @can('access_dashboard')
-                            <a href="{{ route('dashboard') }}">
+                            <a href="{{ route('admin.dashboard') }}">
                                 <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 px-8 py-4 bg-primary text-primary-foreground hover:bg-primary/90 h-11">
                                     Accéder à l'administration
                                     <i class="fas fa-cog"></i>
@@ -39,7 +39,6 @@
         </div>
     </section>
 
-    {{-- Quick Actions --}}
     @auth
         @can('access_dashboard')
             <section class="py-16">
@@ -109,7 +108,6 @@
         @endcan
     @endauth
 
-    {{-- Recent Posts --}}
     <section class="py-16 bg-gray-50/50 dark:bg-slate-900/50">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between mb-12">
@@ -176,7 +174,6 @@
     </section>
 
 
-    {{-- Features Overview --}}
     <section class="py-16">
         <div class="container mx-auto px-4">
             <div class="text-center mb-12">
@@ -211,7 +208,6 @@
         </div>
     </section>
 
-    {{-- Final CTA --}}
     <section class="py-16">
         <div class="container mx-auto px-4 text-center">
             <div class="rounded-lg border shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl max-w-4xl mx-auto p-12">

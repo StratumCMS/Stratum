@@ -17,7 +17,6 @@
 
         <link rel="shortcut icon" href="{{ favicon() }}">
 
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
@@ -25,13 +24,16 @@
 
         @stack('scripts')
     </head>
-    <body class="min-h-screen transition-colors duration-300 dark:bg-slate-900 bg-gray-50">
-            @include('layouts.navigation')
-            <main class="flex-1 container mx-auto px-4 py-8">
-                @yield('content')
-            </main>
+    <body class="min-h-screen flex flex-col transition-colors duration-300 dark:bg-slate-900 bg-gray-50">
+    @include('layouts.navigation')
+
+    <main class="flex-1 container mx-auto px-4 py-8">
+        @yield('content')
+    </main>
+
     @include('elements.footer')
     </body>
+
     <script src="https://kit.fontawesome.com/91664c67de.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
     <script>

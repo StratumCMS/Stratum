@@ -34,7 +34,7 @@
                             </div>
                         </div>
                     @else
-                        <a href="{{ $item->value }}"
+                        <a href="{{ $item->getLink() }}"
                            class="flex items-center space-x-2 text-foreground/70 hover:text-primary transition-colors">
                             @if($item->icon)<i class="{{ $item->icon }} mr-1"></i>@endif
                             {{ $item->name }}

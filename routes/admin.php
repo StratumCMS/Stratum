@@ -57,6 +57,8 @@ Route::middleware(['check.installation', 'auth', 'can:access_dashboard', 'restri
     Route::get('/themes', [ThemeController::class, 'index'])->name('themes.index');
     Route::post('/themes/activate/{slug}', [ThemeController::class, 'activate'])->name('themes.activate');
     Route::post('/themes/deactivate/{slug}', [ThemeController::class, 'deactivate'])->name('themes.deactivate');
+    Route::post('/themes/install/{id}', [ThemeController::class, 'install'])->name('themes.install');
+
     Route::post('/themes/scan', [ThemeController::class, 'scanAndAddThemes'])->name('themes.scan');
     Route::post('/themes/update/{slug}', [ThemeController::class, 'update'])->name('themes.update');
     Route::get('/themes/{slug}/customize', [ThemeController::class, 'customize'])->name('themes.customize');
