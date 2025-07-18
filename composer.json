@@ -35,7 +35,8 @@
         },
         "files": [
             "app/Helpers/helpers.php",
-            "app/Helpers/activity.php"
+            "app/Helpers/activity.php",
+            "bootstrap/modules_autoload.php"
         ]
     },
     "autoload-dev": {

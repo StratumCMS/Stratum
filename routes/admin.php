@@ -65,6 +65,8 @@ Route::middleware(['check.installation', 'auth', 'can:access_dashboard', 'restri
     Route::post('/themes/{slug}/customize', [ThemeController::class, 'saveCustomization'])->name('themes.customize.save');
 
     Route::get('/modules', [ModuleController::class, 'index'])->name('modules.index');
+    Route::post('/modules/install/{id}', [ModuleController::class, 'install'])->name('modules.install');
+
     Route::post('/modules/activate/{slug}', [ModuleController::class, 'activate'])->name('modules.activate');
     Route::post('/modules/deactivate/{slug}', [ModuleController::class, 'deactivate'])->name('modules.deactivate');
     Route::post('/modules/scan', [ModuleController::class, 'scanAndAddModules'])->name('modules.scan');

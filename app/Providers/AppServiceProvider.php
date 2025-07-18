@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Theme;
+use App\Support\ModuleNavigationManager;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -17,7 +18,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(ModuleNavigationManager::class, fn () => new ModuleNavigationManager());
+
     }
 
     /**
@@ -25,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+
         View::composer('*', function ($view) {
             if (str_starts_with($view->getName(), 'admin.')) {
                 return;
@@ -44,15 +47,48 @@ class AppServiceProvider extends ServiceProvider
                 ['route'=>'themes.index','icon'=>'fa-star','label'=>'Thèmes'],
                 ['route'=>'modules.index','icon'=>'fa-th','label'=>'Modules'],
                 ['route'=>'admin.users','icon'=>'fa-users','label'=>'Utilisateurs'],
-                ['route'=>'admin.roles.index','icon'=>'fa-solid fa-shield','label'=>'Roles'],
+                ['route'=>'admin.roles.index','icon'=>'fa-solid fa-shield','label'=>'Rôles'],
                 ['route'=>'admin.stats','icon'=>'fa-chart-pie','label'=>'Statistiques'],
                 ['route'=>'admin.settings','icon'=>'fa-cog','label'=>'Paramètres'],
             ];
 
-            $moduleNavigationItems = collect(config('modules.sidebar_links', []))->toArray();
+            $moduleNavigationRaw = app(ModuleNavigationManager::class)->all();
+
+            \Log::info('Final sidebar module links:', $moduleNavigationRaw);
+
+            $moduleNavigationItems = [];
+
+            foreach ($moduleNavigationRaw as $key => $module) {
+                if (($module['type'] ?? 'link') === 'dropdown' && isset($module['items'])) {
+                    $items = [];
+
+                    foreach ($module['items'] as $route => $item) {
+                        $items[] = [
+                            'route' => $route,
+                            'label' => $item['name'] ?? ucfirst($route),
+                            'icon' => $item['icon'] ?? 'fa-circle',
+                        ];
+                    }
+
+                    $moduleNavigationItems[] = [
+                        'type' => 'dropdown',
+                        'icon' => $module['icon'] ?? 'fa-puzzle-piece',
+                        'label' => $module['name'] ?? ucfirst($key),
+                        'items' => $items,
+                    ];
+                } else {
+                    $moduleNavigationItems[] = [
+                        'type' => 'link',
+                        'route' => $module['route'] ?? 'admin.' . $key . '.index',
+                        'icon' => $module['icon'] ?? 'fa-puzzle-piece',
+                        'label' => $module['name'] ?? ucfirst($key),
+                    ];
+                }
+            }
 
             $view->with(compact('navigationItems', 'moduleNavigationItems'));
         });
+
 
 
         if (Schema::hasTable('settings')) {
@@ -72,6 +108,10 @@ class AppServiceProvider extends ServiceProvider
             Config::set('mail.default', setting('mail.driver', 'smtp'));
             Config::set('mail.from.address', setting('mail.from_address'));
             Config::set('mail.from.name', setting('mail.from_name'));
+        }
+
+        if (\Schema::hasTable('modules')) {
+            \App\Support\ModuleManager::registerActiveModules();
         }
 
     }

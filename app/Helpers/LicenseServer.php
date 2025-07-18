@@ -65,5 +65,4 @@ class LicenseServer
 
         return $filePath;
     }
-
 }
