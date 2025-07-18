@@ -50,7 +50,6 @@ class ThemeController extends Controller
     {
         $licenseKey = setting('site_key');
 
-        // Récupération du produit depuis l'API (pas besoin de licence ici)
         $productResponse = Http::get("http://stratumcom.test/api/v1/products/{$id}");
 
         if (!$productResponse->successful()) {
@@ -66,21 +65,18 @@ class ThemeController extends Controller
         $price = floatval($product['price']);
         $requiresLicense = $price > 0;
 
-        // Si le produit est payant, il faut vérifier la licence
         if ($requiresLicense) {
             if (!$licenseKey || !LicenseServer::canAccessProduct($licenseKey, $id)) {
                 return back()->with('error', 'Ce produit nécessite une licence valide.');
             }
         }
 
-        // Téléchargement du produit via LicenseServer (il s’occupe du paramètre license)
         $zipPath = LicenseServer::downloadProduct($id, $requiresLicense ? $licenseKey : null);
 
         if (!$zipPath || !file_exists($zipPath)) {
             return back()->with('error', 'Le téléchargement du thème a échoué.');
         }
 
-        // Extraction
         $tempDir = storage_path('app/temp/tmp_' . uniqid());
         File::makeDirectory($tempDir);
 
@@ -93,7 +89,6 @@ class ThemeController extends Controller
             return back()->with('error', 'Impossible d’ouvrir l’archive ZIP.');
         }
 
-        // Lecture du manifest
         $manifestPath = $tempDir . '/theme.json';
         if (!File::exists($manifestPath)) {
             File::deleteDirectory($tempDir);
@@ -142,15 +137,12 @@ class ThemeController extends Controller
     public function deactivate($slug)
     {
         $theme = Theme::where('slug', $slug)->firstOrFail();
+
         $theme->update(['active' => false]);
 
-        $defaultTheme = Theme::where('slug', 'default')->first();
-        if ($defaultTheme) {
-            $defaultTheme->update(['active' => true]);
-        }
-
-        return back()->with('success', 'Thème désactivé avec succès. Le thème par défaut a été activé.');
+        return back()->with('success', 'Thème désactivé avec succès. Le système utilisera les vues par défaut.');
     }
+
 
     public function scanAndAddThemes()
     {

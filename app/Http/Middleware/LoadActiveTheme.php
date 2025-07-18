@@ -15,28 +15,32 @@ class LoadActiveTheme
             return $next($request);
         }
 
-        $slug = $request->query('preview');
+        $slug = $request->query('preview') ?? Theme::where('active', true)->value('slug');
+        if (!$slug) return $next($request);
 
-        $theme = $slug
-            ? Theme::where('slug', $slug)->first()
-            : Theme::where('active', true)->first();
+        $themePath = resource_path("themes/{$slug}");
 
-        if ($theme) {
+        if (File::exists("{$themePath}/views")) {
             View::flushFinderCache();
+            View::getFinder()->prependLocation("{$themePath}/views");
 
-            View::addNamespace('theme', resource_path("themes/{$theme->slug}/views"));
-            View::addNamespace('themes', resource_path("themes/{$theme->slug}/"));
+            View::addNamespace('theme', "{$themePath}/views");
+            View::addNamespace('themes', $themePath);
 
-            config(['theme.assets' => asset("resources/themes/{$theme->slug}/assets")]);
+            config(['theme.assets' => asset("themes-assets/{$slug}/assets")]);
         }
 
-        $themesPublicPath = public_path('themes-assets');
-        $themesResourcePath = resource_path('themes');
-
-        if (!file_exists($themesPublicPath)) {
-            File::link($themesResourcePath, $themesPublicPath);
+        $publicAssets = public_path('themes-assets');
+        if (!file_exists($publicAssets)) {
+            symlink(resource_path('themes'), $publicAssets);
         }
+
+        if (str_starts_with($request->route()?->getName() ?? '', 'admin.')) {
+            return $next($request);
+        }
+
 
         return $next($request);
     }
+
 }
