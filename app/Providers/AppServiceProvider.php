@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Theme;
 use App\Support\ModuleNavigationManager;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -113,6 +114,11 @@ class AppServiceProvider extends ServiceProvider
         if (\Schema::hasTable('modules')) {
             \App\Support\ModuleManager::registerActiveModules();
         }
+
+        if (File::isDirectory(resource_path('themes'))) {
+            app(\App\Support\ThemeManager::class)->registerViewNamespaces();
+        }
+
 
     }
 }
