@@ -2,14 +2,17 @@
 
 namespace App\Services;
 
-class CustomAssetsService {
+use Illuminate\Support\Facades\File;
 
-    protected string $basePath = 'resources/custom/';
+class CustomAssetsService
+{
+    protected string $resourcePath = 'resources/custom/';
+    protected string $publicPath = 'public/custom/';
 
     public function ensureFilesExist(): void
     {
-        if (!is_dir(base_path($this->basePath))) {
-            mkdir(base_path($this->basePath), 0755, true);
+        if (!is_dir(base_path($this->resourcePath))) {
+            mkdir(base_path($this->resourcePath), 0755, true);
         }
 
         $this->createFileIfMissing('custom.css');
@@ -18,7 +21,7 @@ class CustomAssetsService {
 
     protected function createFileIfMissing(string $filename): void
     {
-        $path = base_path($this->basePath . $filename);
+        $path = base_path($this->resourcePath . $filename);
         if (!file_exists($path)) {
             file_put_contents($path, '');
         }
@@ -27,15 +30,25 @@ class CustomAssetsService {
     public function getFileContent(string $type): string
     {
         $this->ensureFilesExist();
-        return file_get_contents(base_path($this->basePath . 'custom.' . $type)) ?: '';
+        return file_get_contents(base_path($this->resourcePath . 'custom.' . $type)) ?: '';
     }
 
     public function saveFileContent(string $type, string $content): void
     {
         $this->ensureFilesExist();
-        $content = is_string($content) ? $content : '';
 
-        file_put_contents(base_path($this->basePath . "custom.$type"), $content);
+        $filename = 'custom.' . $type;
+
+        $resourceFile = base_path($this->resourcePath . $filename);
+        $publicFile   = public_path('custom/' . $filename);
+
+        file_put_contents($resourceFile, $content ?? '');
+
+        if (!is_dir(public_path('custom'))) {
+            mkdir(public_path('custom'), 0755, true);
+        }
+
+        file_put_contents($publicFile, $content ?? '');
     }
 
     public function getCssPath(): string
@@ -47,5 +60,4 @@ class CustomAssetsService {
     {
         return asset('custom/custom.js');
     }
-
 }
