@@ -20,7 +20,7 @@ class ThemeController extends Controller
         $marketThemes = collect();
         $licensedIds = [];
 
-        $response = Http::get('http://stratumcom.test/api/v1/products');
+        $response = Http::get('https://stratumcms.com/api/v1/products');
 
         if ($response->successful()) {
             $products = collect($response->json());
@@ -50,7 +50,7 @@ class ThemeController extends Controller
     {
         $licenseKey = setting('site_key');
 
-        $productResponse = Http::get("http://stratumcom.test/api/v1/products/{$id}");
+        $productResponse = Http::get("https://stratumcms.com/api/v1/products/{$id}");
 
         if (!$productResponse->successful()) {
             return back()->with('error', 'Impossible de récupérer les informations du produit.');

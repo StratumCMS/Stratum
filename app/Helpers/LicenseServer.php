@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Http;
 
 class LicenseServer
 {
-    protected static string $apiBase = 'http://stratumcom.test/api/v1';
+    protected static string $apiBase = 'https://stratumcms.com/api/v1';
 
     /**
      * Récupère la liste des produits liés à une licence.

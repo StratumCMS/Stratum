@@ -48,14 +48,9 @@ Avec un système avancé de **thèmes** et **modules**, Stratum permet de créer
    php artisan key:generate
    ```
 
-5. Lancez les migrations :
-   ```bash
-   php artisan migrate
-   ```
-
 6. Compilez les assets frontend :
    ```bash
-   npm run dev
+   npm run dev:admin && npm run dev:install && npm run dev:default
    ```
 
 7. Lancez le serveur local :

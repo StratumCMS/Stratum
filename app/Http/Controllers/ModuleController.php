@@ -21,7 +21,7 @@ class ModuleController extends Controller
         $marketModules = collect();
         $licensedIds = [];
 
-        $response = Http::get('http://stratumcom.test/api/v1/products');
+        $response = Http::get('https://stratumcms.com/api/v1/products');
 
         if ($response->successful()) {
             $products = collect($response->json());
@@ -85,7 +85,7 @@ class ModuleController extends Controller
     {
         $licenseKey = setting('site_key');
 
-        $productResponse = Http::get("http://stratumcom.test/api/v1/products/{$id}");
+        $productResponse = Http::get("https://stratumcms.com/api/v1/products/{$id}");
         if (!$productResponse->successful()) {
             return back()->with('error', 'Impossible de récupérer les informations du produit.');
         }
@@ -158,7 +158,7 @@ class ModuleController extends Controller
         $licenseKey = setting('site_key');
 
         // Vérifie si ce module est payant et doit être sous licence
-        $marketResponse = Http::get('http://stratumcom.test/api/v1/products');
+        $marketResponse = Http::get('https://stratumcms.com/api/v1/products');
         $marketModules = $marketResponse->successful()
             ? collect($marketResponse->json())->filter(fn($item) => $item['type'] === 'module')->keyBy('slug')
             : collect();
