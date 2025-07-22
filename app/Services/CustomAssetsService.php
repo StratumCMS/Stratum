@@ -27,13 +27,15 @@ class CustomAssetsService {
     public function getFileContent(string $type): string
     {
         $this->ensureFilesExist();
-        return file_get_contents(base_path($this->basePath . 'custom.' . $type));
+        return file_get_contents(base_path($this->basePath . 'custom.' . $type)) ?: '';
     }
 
     public function saveFileContent(string $type, string $content): void
     {
         $this->ensureFilesExist();
-        file_put_contents(base_path($this->basePath . 'custom.' . $type), $content);
+        $content = is_string($content) ? $content : '';
+
+        file_put_contents(base_path($this->basePath . "custom.$type"), $content);
     }
 
     public function getCssPath(): string

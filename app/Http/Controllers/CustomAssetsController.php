@@ -20,14 +20,16 @@ class CustomAssetsController extends Controller
         ]);
     }
 
-    public function update(Request $request){
-        $request->validate([
-            'css' => 'nullable|string',
-            'js' => 'nullable|string',
-        ]);
+    public function update(Request $request)
+    {
+        $css = $request->input('css');
+        $js = $request->input('js');
 
-        $this->assetsService->saveFileContent('css', $request->input('css'));
-        $this->assetsService->saveFileContent('js', $request->input('js'));
+        if (!is_string($css)) $css = '';
+        if (!is_string($js)) $js = '';
+
+        $this->assetsService->saveFileContent('css', $css);
+        $this->assetsService->saveFileContent('js', $js);
 
         return redirect()->back()->with('success', 'Fichiers personnalisés mis à jour avec succès.');
     }
