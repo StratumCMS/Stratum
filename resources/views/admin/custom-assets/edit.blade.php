@@ -21,9 +21,18 @@
             </div>
 
             <div class="p-6 pt-4">
-                @if(session('success'))
-                    <div class="mb-4 p-3 rounded-md bg-green-100 text-green-800 border border-green-200">
+                @if (session('success'))
+                    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
+                         x-transition
+                         class="rounded-md bg-green-100 text-green-800 px-4 py-3 border border-green-300 shadow-sm">
                         <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
+                    </div>
+                @endif
+                @if (session('error'))
+                    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
+                         x-transition
+                         class="rounded-md bg-red-100 text-red-800 px-4 py-3 border border-red-300 shadow-sm">
+                        <i class="fas fa-exclamation-circle mr-2"></i> {{ session('error') }}
                     </div>
                 @endif
 
