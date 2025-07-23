@@ -52,6 +52,11 @@ Route::middleware(['check.installation', 'auth', 'can:access_dashboard', 'restri
         Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy');
     });
 
+    Route::get('/update', [AdminController::class, 'updatePage'])->name('admin.update');
+    Route::post('/update/check', [AdminController::class, 'checkUpdate'])->name('admin.update.check');
+    Route::post('/update/run', [AdminController::class, 'runUpdate'])->name('admin.update.run');
+
+
     Route::get('/pages', [PageController::class,'index'])->name('admin.pages');
     Route::post('/pages', [PageController::class,'store'])->name('admin.pages.store');
     Route::put('/pages/{page}', [PageController::class,'update'])->name('admin.pages.update');
