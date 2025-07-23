@@ -135,7 +135,7 @@
 @endsection
 
 @push('scripts')
-    <script src="https://cdn.tiny.cloud/1/gqsyll5b5xddmg9blp1h6i27e56ntb06o1tzzb2cbkd80jfd/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="{{ asset('vendor/tinymce/tinymce.min.js') }}"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
     <script>
         function createArticle(thumbnailUrl) {
@@ -182,9 +182,19 @@
 
         tinymce.init({
             selector: '#content-editor',
+            height: 400,
+            menubar: false,
             plugins: 'link image media lists table',
             toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link image media table',
-            height: 400
+            branding: false,
+
+            base_url: '/vendor/tinymce',
+            suffix: '.min',
+
+            skin: 'oxide-dark',
+            content_css: 'dark',
+
+            license_key: 'no-license'
         });
     </script>
 @endpush

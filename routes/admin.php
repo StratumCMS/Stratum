@@ -1,4 +1,7 @@
 <?php
+
+use App\Http\Controllers\CustomAssetsController;
+use App\Http\Controllers\SettingsTestMailController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\MediaController;
@@ -33,6 +36,9 @@ Route::middleware(['check.installation', 'auth', 'can:access_dashboard', 'restri
     Route::get('/settings', [AdminController::class, 'settings'])->name('admin.settings');
     Route::post('/settings', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
     Route::post('/settings/test-email', [SettingsTestMailController::class, 'send'])->name('settings.test_email');
+
+    Route::get('/custom-assets', [CustomAssetsController::class, 'edit'])->name('admin.custom-assets.edit');
+    Route::put('/custom-assets', [CustomAssetsController::class, 'update'])->name('admin.custom-assets.update');
 
     Route::resource('/navbar', NavbarElementController::class)->except(['show']);
     Route::post('/navbar/reorder', [NavbarElementController::class, 'reorder'])->name('navbar.reorder');

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow">
+    <div class="max-w-md mx-auto mt-12 p-6 bg-white/50 dark:bg-slate-800/60 backdrop-blur-md rounded-2xl shadow-md">
         <h2 class="text-2xl font-semibold mb-4 flex items-center gap-2">
             <i class="fa-solid fa-shield-halved text-primary"></i>
             Vérification en deux étapes
@@ -27,9 +27,9 @@
                 maxlength="6"
                 required
                 placeholder="Code à 6 chiffres"
-                class="w-full px-4 py-2 border rounded-md text-center tracking-widest text-lg"
+                class="pl-10 w-full py-2 px-4 rounded-lg bg-white/70 dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 text-sm"
             />
-            <button type="submit" class="btn-primary w-full">
+            <button type="submit" class="w-full bg-primary text-white py-3 rounded-xl hover:bg-primary/90 transition">
                 <i class="fa-solid fa-check mr-2"></i> Vérifier le code
             </button>
         </form>

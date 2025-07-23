@@ -20,7 +20,7 @@ if (!function_exists('theme_view')) {
             return view("theme::$view", $data);
         }
 
-        return view("pages.$view", $data);
+        return view("$view", $data);
     }
 }
 
