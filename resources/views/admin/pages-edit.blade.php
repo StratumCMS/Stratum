@@ -100,7 +100,7 @@
 @endsection
 
 @push('scripts')
-    <script src="https://cdn.tiny.cloud/1/gqsyll5b5xddmg9blp1h6i27e56ntb06o1tzzb2cbkd80jfd/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="{{ asset('vendor/tinymce/tinymce.min.js') }}"></script>
     <script>
         tinymce.init({
             selector: 'textarea#tinymce',
@@ -108,11 +108,19 @@
             menubar: false,
             plugins: 'link lists code fullscreen table',
             toolbar: 'undo redo | formatselect | bold italic underline | bullist numlist | link table | code fullscreen',
-            branding: false
+            branding: false,
+
+            base_url: '/vendor/tinymce',
+            suffix: '.min',
+
+            skin: 'oxide-dark',
+            content_css: 'dark',
+
+            license_key: 'no-license'
         });
 
         function generateSlug(title) {
-            let s = '/' + title.toLowerCase()
+            let s = '' + title.toLowerCase()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                 .replace(/[^a-z0-9\s-]/g, '').trim()
                 .replace(/\s+/g, '-').replace(/-+/g, '-');
