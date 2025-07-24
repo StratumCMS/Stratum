@@ -4,36 +4,57 @@ use App\Models\NavbarElement;
 use App\Models\Setting;
 use App\Models\Theme;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 if (!function_exists('setting')) {
     function setting($key, $default = null) {
-        return \App\Models\Setting::get($key, $default);
+        if (!app()->runningInConsole() && !Schema::hasTable('settings')) {
+            return $default;
+        }
+
+        try {
+            return Setting::get($key, $default);
+        } catch (\Throwable $e) {
+            return $default;
+        }
     }
 }
 
 if (!function_exists('theme_view')) {
     function theme_view(string $view, array $data = []) {
-        $activeTheme = Theme::where('active', true)->first();
-
-        if ($activeTheme && view()->exists("theme::$view")) {
-            return view("theme::$view", $data);
+        if (app()->runningInConsole() || !Schema::hasTable('themes')) {
+            return view($view, $data);
         }
 
-        return view("$view", $data);
+        try {
+            $activeTheme = Theme::where('active', true)->first();
+
+            if ($activeTheme && view()->exists("theme::$view")) {
+                return view("theme::$view", $data);
+            }
+        } catch (\Throwable $e) {
+        }
+
+        return view($view, $data);
     }
 }
 
 if (!function_exists('theme_asset')) {
     function theme_asset(string $path): string {
-        $theme = Theme::where('active', true)->first();
+        try {
+            if (!app()->runningInConsole() && Schema::hasTable('themes')) {
+                $theme = Theme::where('active', true)->first();
 
-        if ($theme) {
-            return asset("themes-assets/{$theme->slug}/assets/" . ltrim($path, '/'));
-        }
+                if ($theme) {
+                    return asset("themes-assets/{$theme->slug}/assets/" . ltrim($path, '/'));
+                }
+            }
+        } catch (\Throwable $e) {
+}
 
-        return asset("themes/default/assets/" . ltrim($path, '/'));
-    }
+return asset("themes/default/assets/" . ltrim($path, '/'));
+}
 }
 
 if (!function_exists('theme_config')) {
@@ -50,36 +71,49 @@ if (!function_exists('format_date')) {
 }
 
 
+if (!function_exists('format_date')) {
+    function format_date($date, $format = 'd M Y') {
+        return $date ? \Carbon\Carbon::parse($date)->translatedFormat($format) : '';
+    }
+}
+
 if (!function_exists('site_name')) {
     function site_name()
     {
-        return Setting::get('site_name', config('app.name'));
+        return setting('site_name', config('app.name'));
     }
 }
 
 if (!function_exists('site_logo')) {
     function site_logo()
     {
-        return Setting::get('site_logo', '/default-logo.png');
+        return setting('site_logo', '/default-logo.png');
     }
 }
 
 if (!function_exists('favicon')) {
     function favicon()
     {
-        return Setting::get('site_favicon', '/default-logo.png');
+        return setting('site_favicon', '/default-logo.png');
     }
 }
 
-function get_navigation_items()
-{
-    if (!file_exists(storage_path('installed'))) {
-        return collect();
+if (!function_exists('get_navigation_items')) {
+    function get_navigation_items()
+    {
+        try {
+            if (!file_exists(storage_path('installed')) || !Schema::hasTable('navbar_elements')) {
+                return collect();
+            }
+
+            return NavbarElement::with(['elements' => fn($q) => $q->orderBy('position')])
+                ->whereNull('parent_id')
+                ->orderBy('position')
+                ->get();
+        } catch (\Throwable $e) {
+            return collect();
+        }
     }
-    return \App\Models\NavbarElement::with(['elements' => fn($q) => $q->orderBy('position')])
-        ->whereNull('parent_id')
-        ->orderBy('position')
-        ->get();
 }
 
 if (!function_exists('safe_url')) {

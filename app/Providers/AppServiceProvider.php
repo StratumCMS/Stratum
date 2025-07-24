@@ -21,6 +21,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(ModuleNavigationManager::class, fn () => new ModuleNavigationManager());
 
+        if (file_exists('installed')){
+            require_once app_path('Helpers/helpers.php');
+            require_once app_path('Helpers/activity.php');
+        }
     }
 
     /**
