@@ -13,6 +13,12 @@ use App\Models\User;
 use App\Models\Visit;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Process;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class AdminController extends Controller
@@ -227,7 +233,145 @@ class AdminController extends Controller
     }
 
 
+    public function updatePage()
+    {
+        $changelogs = [];
+
+        try {
+            $response = Http::get('https://api.github.com/repos/YuketsuSh/Stratum/releases');
+
+            if ($response->ok()) {
+                $changelogs = collect($response->json())
+                    ->map(function ($release) {
+                        return [
+                            'tag_name' => $release['tag_name'] ?? 'v0.1.0',
+                            'html_url' => $release['html_url'] ?? '',
+                            'name' => $release['name'] ?? '',
+                            'body' => $release['body'] ?? '',
+                        ];
+                    })
+                    ->toArray();
+            }
+        } catch (\Exception $e) {
+            logger()->error('Erreur API GitHub (releases) : ' . $e->getMessage());
+        }
+
+        return view('admin.update', [
+            'changelogs' => $changelogs,
+        ]);
+    }
 
 
+    public function checkUpdate(Request $request)
+    {
+        $currentVersion = config('app.version');
+
+        $response = Http::get('https://api.github.com/repos/YuketsuSh/Stratum/releases/latest');
+
+        if ($response->ok()) {
+            $release = $response->json();
+
+            $tag = $release['tag_name'] ?? null;
+            $version = $tag ? ltrim($tag, 'v') : null;
+
+            if ($version && version_compare($version, $currentVersion, '>')) {
+                $asset = $release['assets'][0] ?? null;
+
+                if (!$asset || !isset($asset['browser_download_url'])) {
+                    return response()->json(['error' => 'Aucun fichier ZIP dans la release.'], 422);
+                }
+
+                return response()->json([
+                    'update_available' => true,
+                    'latest_version' => $version,
+                    'version_tag' => $tag,
+                    'changelog' => $release['body'] ?? '',
+                    'download_url' => $asset['browser_download_url'],
+                ]);
+            }
+        }
+
+        return response()->json(['update_available' => false]);
+    }
+
+    public function runUpdate(Request $request)
+    {
+        $url = $request->input('download_url');
+        $versionTag = $request->input('version_tag');
+        $remoteVersion = ltrim($versionTag, 'v');
+        $currentVersion = config('app.version');
+
+        if (version_compare($remoteVersion, $currentVersion, '<=') || !$remoteVersion) {
+            return response()->json([
+                'success' => false,
+                'message' => 'StratumCMS est déjà à jour.'
+            ], 200);
+        }
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return response()->json(['error' => 'URL invalide.'], 422);
+        }
+
+        $tmpDir = storage_path('app/cms-updates');
+        File::ensureDirectoryExists($tmpDir);
+
+        $tmpZip = $tmpDir . '/update.zip';
+        $extractPath = $tmpDir . '/extracted';
+
+        $zipContent = @file_get_contents($url);
+        if (!$zipContent) {
+            return response()->json(['error' => 'Téléchargement échoué.'], 500);
+        }
+
+        file_put_contents($tmpZip, $zipContent);
+
+        $zip = new \ZipArchive();
+        if ($zip->open($tmpZip) === true) {
+            $zip->extractTo($extractPath);
+            $zip->close();
+        } else {
+            return response()->json(['error' => 'Extraction impossible.'], 500);
+        }
+
+        $extractedRoot = File::directories($extractPath)[0] ?? null;
+        if (!$extractedRoot) {
+            return response()->json(['error' => 'Fichiers extraits introuvables.'], 500);
+        }
+
+        $excluded = ['.env', 'vendor', 'storage', '.git', 'resources/themes', 'public/'];
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($extractedRoot, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($iterator as $item) {
+            $relPath = str_replace($extractedRoot . '/', '', $item->getPathname());
+
+            foreach ($excluded as $ignore) {
+                if (str_starts_with($relPath, $ignore)) continue 2;
+            }
+
+            $dest = base_path($relPath);
+            if ($item->isDir()) {
+                if (!File::exists($dest)) File::makeDirectory($dest, 0755, true);
+            } else {
+                File::copy($item->getPathname(), $dest);
+            }
+        }
+
+        Artisan::call('config:clear');
+        Artisan::call('cache:clear');
+        Artisan::call('view:clear');
+        Artisan::call('migrate', ['--force' => true]);
+        Process::run('composer install --no-interaction --prefer-dist --optimize-autoloader');
+
+        File::delete($tmpZip);
+        File::deleteDirectory($extractPath);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Mise à jour vers la version ' . $remoteVersion . ' effectuée avec succès.'
+        ]);
+    }
 
 }
