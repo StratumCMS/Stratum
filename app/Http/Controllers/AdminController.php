@@ -233,9 +233,34 @@ class AdminController extends Controller
     }
 
 
-    public function updatePage(){
-        return view('admin.update');
+    public function updatePage()
+    {
+        $changelogs = [];
+
+        try {
+            $response = Http::get('https://api.github.com/repos/YuketsuSh/Stratum/releases');
+
+            if ($response->ok()) {
+                $changelogs = collect($response->json())
+                    ->map(function ($release) {
+                        return [
+                            'tag_name' => $release['tag_name'] ?? 'v0.1.0',
+                            'html_url' => $release['html_url'] ?? '',
+                            'name' => $release['name'] ?? '',
+                            'body' => $release['body'] ?? '',
+                        ];
+                    })
+                    ->toArray();
+            }
+        } catch (\Exception $e) {
+            logger()->error('Erreur API GitHub (releases) : ' . $e->getMessage());
+        }
+
+        return view('admin.update', [
+            'changelogs' => $changelogs,
+        ]);
     }
+
 
     public function checkUpdate(Request $request)
     {

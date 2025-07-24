@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 
 return [
+    'version' => env('APP_VERSION', '0.1.0'),
+
 
     /*
     |--------------------------------------------------------------------------
@@ -185,8 +187,5 @@ return [
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
-
-    'version' => env('APP_VERSION', '0.1.0'),
-
 
 ];
