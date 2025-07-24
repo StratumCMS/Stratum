@@ -20,3 +20,4 @@ yarn-error.log
 /.vscode
 /.cache
 storage/installed
+**/*.sqlite
