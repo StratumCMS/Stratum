@@ -38,6 +38,12 @@ class RouteServiceProvider extends ServiceProvider
                 ->group(base_path('routes/web.php'));
         });
 
-        ModuleRouteLoader::loadAll();
+
+        if (file_exists(storage_path('installed'))) {
+            try {
+                ModuleRouteLoader::loadAll();
+            } catch (\Throwable $e) {
+            }
+        }
     }
 }

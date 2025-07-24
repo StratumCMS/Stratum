@@ -16,6 +16,11 @@ class ModuleServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+
+        if (!file_exists(storage_path('installed'))) {
+            return;
+        }
+
         if (!Schema::hasTable('modules')) {
             return;
         }

@@ -25,6 +25,10 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
+        if (!file_exists(storage_path('installed'))) {
+            return;
+        }
+
         if (Schema::hasTable('permissions')) {
             Permission::all()->each(function ($permission) {
                 Gate::define($permission->name, function ($user) use ($permission) {

@@ -21,7 +21,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(ModuleNavigationManager::class, fn () => new ModuleNavigationManager());
 
-        if (file_exists('installed')){
+        if (file_exists(storage_path('installed'))) {
+
             require_once app_path('Helpers/helpers.php');
             require_once app_path('Helpers/activity.php');
         }
@@ -32,6 +33,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+
+        if (!file_exists(storage_path('installed'))) {
+            return;
+        }
 
         View::composer('*', function ($view) {
             if (str_starts_with($view->getName(), 'admin.')) {
