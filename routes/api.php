@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ArticleApiController;
 use App\Http\Controllers\Api\AuthApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,3 +29,6 @@ Route::prefix('/auth')->name('auth.')->group(function () {
     });
 
 });
+
+Route::get('/articles', [ArticleApiController::class, 'index']);
+Route::get('/articles/{article}', [ArticleApiController::class, 'show']);

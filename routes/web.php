@@ -18,6 +18,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Middleware\LoadActiveTheme;
 use App\Models\Theme;
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\CheckHeadlessMode;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -34,7 +36,7 @@ require __DIR__.'/auth.php';
 
 require __DIR__.'/admin.php';
 
-Route::middleware(['check.installation', LoadActiveTheme::class])->group(function () {
+Route::middleware(['check.installation', LoadActiveTheme::class, 'headless'])->group(function () {
 
     Route::get('/', [HomeController::class, 'index'])->name('home');
 

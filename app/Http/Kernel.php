@@ -44,7 +44,6 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\MaintenanceMode::class,
             \App\Http\Middleware\LimitLoginAttempts::class,
             \App\Http\Middleware\Ensure2FAIsVerified::class,
-            \App\Http\Middleware\CheckHeadlessMode::class,
         ],
 
         'api' => [
@@ -74,6 +73,8 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'check.installation' => \App\Http\Middleware\CheckInstallation::class,
-        'restrict.ip' => \App\Http\Middleware\RestrictAdminAccess::class
+        'restrict.ip' => \App\Http\Middleware\RestrictAdminAccess::class,
+        'headless' => \App\Http\Middleware\CheckHeadlessMode::class,
+
     ];
 }
