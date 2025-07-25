@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthApiController;
 use App\Http\Controllers\Api\MediaApiController;
 use App\Http\Controllers\Api\ModuleApiController;
 use App\Http\Controllers\Api\PageApiController;
+use App\Http\Controllers\Api\SettingApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -44,3 +45,6 @@ Route::get('/media/{media}', [MediaApiController::class, 'show']);
 Route::get('/articles/{article}/media', [MediaApiController::class, 'forArticle']);
 Route::get('/media-items', [MediaApiController::class, 'mediaItems']);
 Route::get('/modules', [ModuleApiController::class, 'index']);
+
+Route::get('/settings', [SettingApiController::class, 'index']);
+Route::get('/settings/{key}', [SettingApiController::class, 'show']);
