@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ArticleApiController;
 use App\Http\Controllers\Api\AuthApiController;
 use App\Http\Controllers\Api\CommentApiController;
+use App\Http\Controllers\Api\LikeApiController;
 use App\Http\Controllers\Api\MediaApiController;
 use App\Http\Controllers\Api\ModuleApiController;
 use App\Http\Controllers\Api\PageApiController;
@@ -53,4 +54,9 @@ Route::get('/settings/{key}', [SettingApiController::class, 'show']);
 Route::prefix('/articles/{article}/comments')->group(function () {
     Route::get('/', [CommentApiController::class, 'index']);
     Route::middleware('auth:sanctum')->post('/', [CommentApiController::class, 'store']);
+});
+
+Route::middleware('auth:sanctum')->prefix('/articles/{article}')->group(function () {
+    Route::post('/like', [LikeApiController::class, 'toggle']);
+    Route::get('/like', [LikeApiController::class, 'isLiked']);
 });
