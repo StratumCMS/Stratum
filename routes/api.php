@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ArticleApiController;
 use App\Http\Controllers\Api\AuthApiController;
+use App\Http\Controllers\Api\MediaApiController;
 use App\Http\Controllers\Api\PageApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -36,3 +37,8 @@ Route::get('/articles/{article}', [ArticleApiController::class, 'show']);
 
 Route::get('/pages', [PageApiController::class, 'index']);
 Route::get('/pages/{page}', [PageApiController::class, 'show']);
+
+Route::get('/media', [MediaApiController::class, 'index']);
+Route::get('/media/{media}', [MediaApiController::class, 'show']);
+Route::get('/articles/{article}/media', [MediaApiController::class, 'forArticle']);
+Route::get('/media-items', [MediaApiController::class, 'mediaItems']);
