@@ -35,6 +35,7 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
+            "app/Support/EnvEditor.php",
             "bootstrap/modules_autoload.php"
         ]
     },
