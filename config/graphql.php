@@ -20,7 +20,7 @@ return [
     'schemas' => [
         'default' => [
             'query' => [
-                // App\GraphQL\Queries\ArticleQuery::class,
+                App\GraphQL\Queries\ArticlesQuery::class,
             ],
 
             'mutation' => [
