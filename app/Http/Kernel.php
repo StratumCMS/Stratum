@@ -23,6 +23,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         \App\Http\Middleware\ApplyCacheSettings::class,
         \App\Http\Middleware\InjectCustomAssets::class,
+        \App\Http\Middleware\CheckHeadlessMode::class
     ];
 
     /**
@@ -50,6 +51,7 @@ class Kernel extends HttpKernel
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\CheckApiType::class,
         ],
     ];
 

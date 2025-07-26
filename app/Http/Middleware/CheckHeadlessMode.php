@@ -19,7 +19,8 @@ class CheckHeadlessMode
         if (config('cms.mode') === 'headless') {
             if (! $request->is('admin*') &&
                 ! $request->is('api*') &&
-                ! $request->is('graphql*') &&
+                ! $request->is('graphql') &&
+                ! $request->is('graphql/*') &&
                 ! $request->is('login') &&
                 ! $request->is('register') &&
                 ! $request->is('forgot-password') &&

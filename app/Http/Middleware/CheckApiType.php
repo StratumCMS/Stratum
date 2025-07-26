@@ -22,7 +22,7 @@ class CheckApiType
             abort(404);
         }
 
-        if ($request->is('graphql') && $api_type !== 'graph'){
+        if ($request->is('graphql*') && $api_type !== 'graph'){
             abort(404);
         }
 
