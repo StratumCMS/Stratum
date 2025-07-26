@@ -75,6 +75,7 @@ class Kernel extends HttpKernel
         'check.installation' => \App\Http\Middleware\CheckInstallation::class,
         'restrict.ip' => \App\Http\Middleware\RestrictAdminAccess::class,
         'headless' => \App\Http\Middleware\CheckHeadlessMode::class,
+        'check.api.type' => \App\Http\Middleware\CheckApiType::class,
 
     ];
 }

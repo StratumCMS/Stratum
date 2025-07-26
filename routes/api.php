@@ -36,27 +36,29 @@ Route::prefix('/auth')->name('auth.')->group(function () {
 
 });
 
-Route::get('/articles', [ArticleApiController::class, 'index']);
-Route::get('/articles/{article}', [ArticleApiController::class, 'show']);
+Route::middleware(['check.api.type'])->group(function () {
+    Route::get('/articles', [ArticleApiController::class, 'index']);
+    Route::get('/articles/{article}', [ArticleApiController::class, 'show']);
 
-Route::get('/pages', [PageApiController::class, 'index']);
-Route::get('/pages/{page}', [PageApiController::class, 'show']);
+    Route::get('/pages', [PageApiController::class, 'index']);
+    Route::get('/pages/{page}', [PageApiController::class, 'show']);
 
-Route::get('/media', [MediaApiController::class, 'index']);
-Route::get('/media/{media}', [MediaApiController::class, 'show']);
-Route::get('/articles/{article}/media', [MediaApiController::class, 'forArticle']);
-Route::get('/media-items', [MediaApiController::class, 'mediaItems']);
-Route::get('/modules', [ModuleApiController::class, 'index']);
+    Route::get('/media', [MediaApiController::class, 'index']);
+    Route::get('/media/{media}', [MediaApiController::class, 'show']);
+    Route::get('/articles/{article}/media', [MediaApiController::class, 'forArticle']);
+    Route::get('/media-items', [MediaApiController::class, 'mediaItems']);
+    Route::get('/modules', [ModuleApiController::class, 'index']);
 
-Route::get('/settings', [SettingApiController::class, 'index']);
-Route::get('/settings/{key}', [SettingApiController::class, 'show']);
+    Route::get('/settings', [SettingApiController::class, 'index']);
+    Route::get('/settings/{key}', [SettingApiController::class, 'show']);
 
-Route::prefix('/articles/{article}/comments')->group(function () {
-    Route::get('/', [CommentApiController::class, 'index']);
-    Route::middleware('auth:sanctum')->post('/', [CommentApiController::class, 'store']);
-});
+    Route::prefix('/articles/{article}/comments')->group(function () {
+        Route::get('/', [CommentApiController::class, 'index']);
+        Route::middleware('auth:sanctum')->post('/', [CommentApiController::class, 'store']);
+    });
 
-Route::middleware('auth:sanctum')->prefix('/articles/{article}')->group(function () {
-    Route::post('/like', [LikeApiController::class, 'toggle']);
-    Route::get('/like', [LikeApiController::class, 'isLiked']);
+    Route::middleware('auth:sanctum')->prefix('/articles/{article}')->group(function () {
+        Route::post('/like', [LikeApiController::class, 'toggle']);
+        Route::get('/like', [LikeApiController::class, 'isLiked']);
+    });
 });
