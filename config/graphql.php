@@ -27,7 +27,7 @@ return [
             ],
 
             'mutation' => [
-                // App\GraphQL\Mutations\CreateArticleMutation::class,
+                App\GraphQL\Mutations\UserProfileUpdateMutation::class,
             ],
 
             'types' => [
