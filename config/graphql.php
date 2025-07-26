@@ -28,11 +28,17 @@ return [
 
             'mutation' => [
                 App\GraphQL\Mutations\UserProfileUpdateMutation::class,
+                App\GraphQL\Mutations\LoginSanctumMutation::class,
+                \App\GraphQL\Mutations\RegisterSanctumMutation::class,
+                \App\GraphQL\Mutations\LogoutSanctumMutation::class,
+                \App\GraphQL\Mutations\ForgotPasswordMutation::class,
+                \App\GraphQL\Mutations\ResetPasswordMutation::class,
             ],
 
             'types' => [
                 App\GraphQL\Types\UserType::class,
                 App\GraphQL\Types\ArticleType::class,
+                App\GraphQL\Types\LoginResultType::class,
             ],
 
             'middleware' => null,
