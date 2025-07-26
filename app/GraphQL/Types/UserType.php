@@ -1,9 +1,11 @@
 <?php
 
 namespace App\GraphQL\Types;
+
 use App\Models\User;
-use GraphQL\Type\Definition\Type as GraphQLBaseType;
+use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Type as GraphQLType;
+
 class UserType extends GraphQLType
 {
 
@@ -17,18 +19,26 @@ class UserType extends GraphQLType
     {
         return [
             'id' => [
-                'type' => GraphQLBaseType::nonNull(GraphQLBaseType::int()),
+                'type' => Type::nonNull(Type::int()),
             ],
             'name' => [
-                'type' => GraphQLBaseType::string(),
+                'type' => Type::string(),
             ],
             'email' => [
-                'type' => GraphQLBaseType::string(),
+                'type' => Type::string(),
             ],
             'created_at' => [
-                'type' => GraphQLBaseType::string(),
+                'type' => Type::string(),
+            ],
+            'updated_at' => [
+                'type' => Type::string(),
+            ],
+            'roles' => [
+                'type' => Type::listOf(Type::string()),
+                'resolve' => fn($user) => $user->roles->pluck('name')->toArray(),
             ],
         ];
     }
+
 
 }

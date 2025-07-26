@@ -7,10 +7,11 @@ use GraphQL\Type\Definition\Type;
 use Rebing\GraphQL\Support\Facades\GraphQL;
 use Rebing\GraphQL\Support\Query;
 
-class ArticlesQuery extends Query
+class ArticlesIndexQuery extends Query
 {
     protected $attributes = [
         'name' => 'articles',
+        'description' => 'Liste tous les articles',
     ];
 
 
@@ -21,7 +22,13 @@ class ArticlesQuery extends Query
 
     public function resolve($root, $args)
     {
-        return Article::published()->get();
+        return Article::with('author')
+            ->where('is_published', true)
+            ->where(function ($q) {
+                $q->whereDate('published_at', '<=', now())->orWhereNull('published_at');
+            })
+            ->latest()
+            ->get();
     }
 
 }

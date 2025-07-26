@@ -20,7 +20,10 @@ return [
     'schemas' => [
         'default' => [
             'query' => [
-                App\GraphQL\Queries\ArticlesQuery::class,
+                App\GraphQL\Queries\ArticlesIndexQuery::class,
+                App\GraphQL\Queries\ArticlesShowQuery::class,
+                App\GraphQL\Queries\UsersIndexQuery::class,
+                App\GraphQL\Queries\UsersShowQuery::class,
             ],
 
             'mutation' => [

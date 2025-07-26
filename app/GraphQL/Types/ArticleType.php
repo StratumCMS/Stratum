@@ -2,6 +2,7 @@
 
 namespace App\GraphQL\Types;
 use App\Models\Article;
+use Rebing\GraphQL\Support\Facades\GraphQL;
 use GraphQL\Type\Definition\Type as GraphQLBaseType;
 use Rebing\GraphQL\Support\Type as GraphQLType;
 
@@ -42,8 +43,9 @@ class ArticleType extends GraphQLType
                 'resolve' => fn ($article) => $article->getFirstMediaUrl('thumbnails')  ?: $article->thumbnail(),
             ],
             'author' => [
-                'type' => \GraphQL::type('User'),
-            ]
+                'type' => GraphQL::type('User'),
+                'resolve' => fn($article) => $article->author,
+            ],
         ];
     }
 
