@@ -29,10 +29,13 @@ return [
             'mutation' => [
                 App\GraphQL\Mutations\UserProfileUpdateMutation::class,
                 App\GraphQL\Mutations\LoginSanctumMutation::class,
-                \App\GraphQL\Mutations\RegisterSanctumMutation::class,
-                \App\GraphQL\Mutations\LogoutSanctumMutation::class,
-                \App\GraphQL\Mutations\ForgotPasswordMutation::class,
-                \App\GraphQL\Mutations\ResetPasswordMutation::class,
+                App\GraphQL\Mutations\RegisterSanctumMutation::class,
+                App\GraphQL\Mutations\LogoutSanctumMutation::class,
+                App\GraphQL\Mutations\ForgotPasswordMutation::class,
+                App\GraphQL\Mutations\ResetPasswordMutation::class,
+                App\GraphQL\Mutations\Enable2FAMutation::class,
+                App\GraphQL\Mutations\Verify2FAMutation::class,
+                App\GraphQL\Mutations\Disable2FAMutation::class,
             ],
 
             'types' => [
