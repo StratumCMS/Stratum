@@ -36,6 +36,8 @@ return [
                 App\GraphQL\Mutations\Enable2FAMutation::class,
                 App\GraphQL\Mutations\Verify2FAMutation::class,
                 App\GraphQL\Mutations\Disable2FAMutation::class,
+                App\GraphQL\Mutations\CommentAddMutation::class,
+                App\GraphQL\Mutations\CommentDeleteMutation::class,
             ],
 
             'types' => [
