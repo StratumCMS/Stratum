@@ -11,7 +11,7 @@ class EnvEditor {
         $envPath = $path ?? app()->environmentFilePath();
 
         if (!File::exists($envPath)) {
-            throw new RuntimeException("Fichier .env manquant ${envPath}");
+            throw new RuntimeException("Fichier .env manquant {$envPath}");
         }
 
         $content = File::get($envPath);
@@ -26,7 +26,7 @@ class EnvEditor {
                     "{$key}={$espacedValue}",
                     $content
                 );
-            }else{
+            } else {
                 $content .= "\n{$key}={$espacedValue}";
             }
         }
@@ -52,5 +52,4 @@ class EnvEditor {
 
         return $value;
     }
-
 }
