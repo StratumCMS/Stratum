@@ -32,6 +32,8 @@ return [
                 App\GraphQL\Queries\ActiveModulesQuery::class,
                 App\GraphQL\Queries\PagesIndexQuery::class,
                 App\GraphQL\Queries\PagesShowQuery::class,
+                App\GraphQL\Queries\SettingsIndexQuery::class,
+                App\GraphQL\Queries\SettingsShowQuery::class,
             ],
 
             'mutation' => [
@@ -57,6 +59,7 @@ return [
                 App\GraphQL\Types\MediaType::class,
                 App\GraphQL\Types\ModuleType::class,
                 App\GraphQL\Types\PageType::class,
+                App\GraphQL\Types\SettingType::class,
             ],
 
             'middleware' => null,
