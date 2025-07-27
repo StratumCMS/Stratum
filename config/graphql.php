@@ -24,6 +24,7 @@ return [
                 App\GraphQL\Queries\ArticlesShowQuery::class,
                 App\GraphQL\Queries\UsersIndexQuery::class,
                 App\GraphQL\Queries\UsersShowQuery::class,
+                App\GraphQL\Queries\ArticleIsLikedQuery::class,
             ],
 
             'mutation' => [
@@ -38,6 +39,7 @@ return [
                 App\GraphQL\Mutations\Disable2FAMutation::class,
                 App\GraphQL\Mutations\CommentAddMutation::class,
                 App\GraphQL\Mutations\CommentDeleteMutation::class,
+                App\GraphQL\Mutations\ArticleToggleLikeMutation::class,
             ],
 
             'types' => [

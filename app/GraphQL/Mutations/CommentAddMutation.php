@@ -23,7 +23,7 @@ class CommentAddMutation extends Mutation
 
     public function authorize(mixed $root, array $args, mixed $ctx, ?\GraphQL\Type\Definition\ResolveInfo $info = null, ?\Closure $getSelectFields = null): bool
     {
-        return Auth::check();
+        return auth()->check();
     }
 
     public function args(): array
