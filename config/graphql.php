@@ -25,6 +25,10 @@ return [
                 App\GraphQL\Queries\UsersIndexQuery::class,
                 App\GraphQL\Queries\UsersShowQuery::class,
                 App\GraphQL\Queries\ArticleIsLikedQuery::class,
+                App\GraphQL\Queries\MediaIndexQuery::class,
+                App\GraphQL\Queries\MediaShowQuery::class,
+                App\GraphQL\Queries\MediaForArticleQuery::class,
+                App\GraphQL\Queries\MediaItemsQuery::class,
             ],
 
             'mutation' => [
@@ -47,6 +51,7 @@ return [
                 App\GraphQL\Types\ArticleType::class,
                 App\GraphQL\Types\LoginResultType::class,
                 App\GraphQL\Types\CommentType::class,
+                App\GraphQL\Types\MediaType::class,
             ],
 
             'middleware' => null,
