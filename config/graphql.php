@@ -29,6 +29,7 @@ return [
                 App\GraphQL\Queries\MediaShowQuery::class,
                 App\GraphQL\Queries\MediaForArticleQuery::class,
                 App\GraphQL\Queries\MediaItemsQuery::class,
+                App\GraphQL\Queries\ActiveModulesQuery::class,
             ],
 
             'mutation' => [
@@ -52,6 +53,7 @@ return [
                 App\GraphQL\Types\LoginResultType::class,
                 App\GraphQL\Types\CommentType::class,
                 App\GraphQL\Types\MediaType::class,
+                App\GraphQL\Types\ModuleType::class,
             ],
 
             'middleware' => null,
