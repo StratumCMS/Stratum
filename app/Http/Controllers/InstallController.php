@@ -83,14 +83,34 @@ class InstallController extends Controller
             Artisan::call('config:clear');
             Artisan::call('cache:clear');
             Artisan::call('config:cache');
-            Artisan::call('migrate:fresh', ['--force' => true]);
-            Artisan::call('storage:link');
+            Artisan::call('migrate', ['--force' => true]);
 
-            return redirect()->route('install.step3');
+            return redirect()->route('install.step2_5');
         } catch (\Throwable $e) {
             return back()->withInput()->withErrors(['error' => 'Connexion à la base de données impossible : '.$e->getMessage()]);
         }
     }
+
+    public function step2_5()
+    {
+        return view('install.step2_5');
+    }
+
+    public function storeStep2_5(Request $request)
+    {
+        $request->validate([
+            'cms_mode' => 'required|in:standard,headless',
+            'cms_api_type' => 'required_if:cms_mode,headless|in:rest,graphql,both',
+        ]);
+
+        \App\Support\EnvEditor::updateEnv([
+            'CMS_MODE' => $request->cms_mode,
+            'CMS_API_TYPE' => $request->cms_api_type,
+        ]);
+
+        return redirect()->route('install.step3');
+    }
+
 
     public function step3()
     {

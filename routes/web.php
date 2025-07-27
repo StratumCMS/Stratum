@@ -16,9 +16,10 @@ use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\LoadActiveTheme;
-use App\Http\Middleware\PreviewTheme;
 use App\Models\Theme;
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\CheckHeadlessMode;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -35,7 +36,7 @@ require __DIR__.'/auth.php';
 
 require __DIR__.'/admin.php';
 
-Route::middleware(['check.installation', LoadActiveTheme::class])->group(function () {
+Route::middleware(['check.installation', LoadActiveTheme::class, 'headless'])->group(function () {
 
     Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -51,6 +52,11 @@ Route::middleware(['check.installation', LoadActiveTheme::class])->group(functio
 
         Route::get('/step-2', [InstallController::class, 'step2'])->name('install.step2');
         Route::post('/step-2', [InstallController::class, 'storeStep2'])->name('install.storeStep2');
+        Route::get('/step2-5', [InstallController::class, 'step2_5'])->name('install.step2_5');
+        Route::post('/step2-5', [InstallController::class, 'storeStep2_5'])->name('install.storeStep2_5');
+
+        Route::get('/write-env', [InstallController::class, 'writeEnv'])->name('install.writeEnv');
+
 
         Route::get('/step-3', [InstallController::class, 'step3'])->name('install.step3');
         Route::post('/step-3', [InstallController::class, 'storeStep3'])->name('install.storeStep3');

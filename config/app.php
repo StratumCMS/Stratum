@@ -171,6 +171,7 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         App\Providers\ModuleServiceProvider::class,
+        Rebing\GraphQL\GraphQLServiceProvider::class,
     ])->toArray(),
 
     /*
@@ -186,6 +187,7 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
+        'GraphQL' => Rebing\GraphQL\Support\Facades\GraphQL::class,
     ])->toArray(),
 
 ];

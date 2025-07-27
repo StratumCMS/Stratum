@@ -13,6 +13,7 @@
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
         "pragmarx/google2fa-laravel": "^2.3",
+        "rebing/graphql-laravel": "^9.8",
         "spatie/laravel-backup": "^8.8",
         "spatie/laravel-image-optimizer": "^1.8",
         "spatie/laravel-medialibrary": "^10.15",
