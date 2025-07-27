@@ -34,12 +34,14 @@ class ArticlesShowQuery extends Query
 
     public function resolve($root, $args)
     {
+        $query = Article::with(['author', 'comments.user', 'likes']);
+
         if (isset($args['id'])) {
-            return Article::with('author')->find($args['id']);
+            return $query->find($args['id']);
         }
 
         if (isset($args['slug'])) {
-            return Article::with('author')->where('slug', $args['slug'])->first();
+            return $query->where('slug', $args['slug'])->first();
         }
 
         return null;

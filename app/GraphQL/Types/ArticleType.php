@@ -46,6 +46,23 @@ class ArticleType extends GraphQLType
                 'type' => GraphQL::type('User'),
                 'resolve' => fn($article) => $article->author,
             ],
+            'likes_count' => [
+                'type' => GraphQLBaseType::int(),
+                'description' => 'Nombre de likes',
+                'resolve' => fn ($article) => $article->likes()->count(),
+            ],
+
+            'comments_count' => [
+                'type' => GraphQLBaseType::int(),
+                'description' => 'Nombre de commentaires',
+                'resolve' => fn ($article) => $article->comments()->count(),
+            ],
+
+            'comments' => [
+                'type' => GraphQLBaseType::listOf(GraphQL::type('Comment')),
+                'description' => 'Commentaires de l’article',
+                'resolve' => fn ($article) => $article->comments()->with('user')->latest()->get(),
+            ],
         ];
     }
 

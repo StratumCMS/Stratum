@@ -44,6 +44,7 @@ return [
                 App\GraphQL\Types\UserType::class,
                 App\GraphQL\Types\ArticleType::class,
                 App\GraphQL\Types\LoginResultType::class,
+                App\GraphQL\Types\CommentType::class,
             ],
 
             'middleware' => null,

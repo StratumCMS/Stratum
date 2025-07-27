@@ -22,7 +22,7 @@ class ArticlesIndexQuery extends Query
 
     public function resolve($root, $args)
     {
-        return Article::with('author')
+        return Article::with(['author', 'comments.user', 'likes'])
             ->where('is_published', true)
             ->where(function ($q) {
                 $q->whereDate('published_at', '<=', now())->orWhereNull('published_at');
