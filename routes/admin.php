@@ -62,6 +62,8 @@ Route::middleware(['check.installation', 'auth', 'can:access_dashboard', 'restri
     Route::put('/pages/{page}', [PageController::class,'update'])->name('admin.pages.update');
     Route::delete('/pages/{page}', [PageController::class,'destroy'])->name('admin.pages.destroy');
     Route::get('/pages/create', [PageController::class, 'create'])->name('admin.pages.create');
+    Route::get('/pages/create/builder', [PageController::class, 'createBuilder'])->name('admin.pages.create.builder');
+    Route::get('/pages/create/advanced', [PageController::class, 'createAdvanced'])->name('admin.pages.create.advanced');
     Route::get('/pages/{page}/edit', [PageController::class, 'edit'])->name('admin.pages.edit');
 
 

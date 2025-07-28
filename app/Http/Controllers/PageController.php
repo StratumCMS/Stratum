@@ -25,18 +25,23 @@ class PageController extends Controller
         return view('admin.pages', compact('pages','templates','stats'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $templates = [
-            ['value'=>'default','label'=>'Par défaut'],
-            ['value'=>'home','label'=>'Page d\'accueil'],
-            ['value'=>'services','label'=>'Services'],
-            ['value'=>'contact','label'=>'Contact'],
-            ['value'=>'blog','label'=>'Blog'],
-        ];
+        return redirect()->route('admin.pages.create.builder');
+    }
 
+    public function createBuilder()
+    {
+        $templates = $this->getTemplates();
+        return view('admin.pages-builder-create', compact('templates'));
+    }
+
+    public function createAdvanced()
+    {
+        $templates = $this->getTemplates();
         return view('admin.pages-create', compact('templates'));
     }
+
 
     public function edit(Page $page)
     {
@@ -115,4 +120,16 @@ class PageController extends Controller
 
         return theme_view('pages', compact('page'));
     }
+
+    private function getTemplates(): array
+    {
+        return [
+            ['value'=>'default','label'=>'Par défaut'],
+            ['value'=>'home','label'=>'Page d\'accueil'],
+            ['value'=>'services','label'=>'Services'],
+            ['value'=>'contact','label'=>'Contact'],
+            ['value'=>'blog','label'=>'Blog'],
+        ];
+    }
+
 }
