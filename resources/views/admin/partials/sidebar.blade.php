@@ -1,5 +1,5 @@
 <aside id="sidebar"
-       class="w-64 bg-sidebar border-r border-sidebar-border h-screen fixed left-0 top-0 z-30">
+       class="w-64 bg-card/50 backdrop-blur-sm border-r border-sidebar-border h-screen fixed left-0 top-0 z-30">
     <div class="flex flex-col h-full">
         {{-- Header --}}
         <div class="h-16 flex items-center px-6 border-b border-sidebar-border">

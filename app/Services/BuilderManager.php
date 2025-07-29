@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Log;
 
@@ -10,15 +10,23 @@ class BuilderManager
 {
     protected array $blocks = [];
 
-    public function registerBlock(string $key, array $config): void {
+    public function __construct()
+    {
+        $this->loadBlocksFromDirectory(resource_path('blocks'));
+    }
+
+    public function registerBlock(string $key, array $config): void
+    {
         $this->blocks[$key] = $config;
     }
 
-    public function getAvailableBlocks(): array {
+    public function getAvailableBlocks(): array
+    {
         return $this->blocks;
     }
 
-    public function renderLayout(array $layout): string {
+    public function renderLayout(array $layout): string
+    {
         return $this->renderBlock([
             'type' => 'root',
             'children' => $layout,
@@ -26,22 +34,19 @@ class BuilderManager
         ]);
     }
 
-    public function renderBlock(array $block): string {
+    public function renderBlock(array $block): string
+    {
         $type = $block['type'] ?? null;
 
         if (!$type || !isset($this->blocks[$type])) {
-            if (app()->environment('local')) {
-                Log::warning("Bloc non reconnu ou invalide : " . json_encode($block));
-            }
+            Log::warning("Bloc non reconnu ou invalide : " . json_encode($block));
             return '';
         }
 
         $view = $this->blocks[$type]['view'] ?? null;
 
         if (!$view || !View::exists($view)) {
-            if (app()->environment('local')) {
-                Log::warning("Vue non trouvée pour le bloc « $type » ($view)");
-            }
+            Log::warning("Vue non trouvée pour le bloc « $type » ($view)");
             return '';
         }
 
@@ -56,11 +61,13 @@ class BuilderManager
         return view($view, ['settings' => $settings])->render();
     }
 
-    public function getBlockSchema(string $type): ?array {
+    public function getBlockSchema(string $type): ?array
+    {
         return $this->blocks[$type]['settings_schema'] ?? null;
     }
 
-    public function allBlockConfigs(): array {
+    public function allBlockConfigs(): array
+    {
         return collect($this->blocks)
             ->map(fn($config, $key) => [
                 'type' => $key,
@@ -72,4 +79,33 @@ class BuilderManager
             ->toArray();
     }
 
+    protected function loadBlocksFromDirectory(string $directory): void
+    {
+        $bladeFiles = File::allFiles($directory);
+
+        foreach ($bladeFiles as $file) {
+            if ($file->getExtension() !== 'blade.php') continue;
+
+            $relativePath = str_replace(resource_path('views') . DIRECTORY_SEPARATOR, '', $file->getPathname());
+            $viewPath = str_replace(['/', '.blade.php'], ['.', ''], $relativePath);
+
+            $key = str_replace(['/', '\\'], '-', $file->getRelativePathname());
+            $key = str_replace('.blade.php', '', $key);
+
+            $jsonPath = str_replace('.blade.php', '.json', $file->getPathname());
+
+            $settingsSchema = [];
+            if (File::exists($jsonPath)) {
+                $schemaContent = File::get($jsonPath);
+                $settingsSchema = json_decode($schemaContent, true) ?? [];
+            }
+
+            $this->registerBlock($key, [
+                'view' => $viewPath,
+                'label' => ucfirst(basename($key)),
+                'icon' => '🧩',
+                'settings_schema' => $settingsSchema,
+            ]);
+        }
+    }
 }

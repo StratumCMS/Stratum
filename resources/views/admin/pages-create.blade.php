@@ -11,6 +11,12 @@
             </a>
         </div>
 
+        <div class="flex justify-end">
+            <a href="{{ route('admin.pages.create.builder') }}" class="border border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex items-center gap-2 h-9 rounded-md px-3 text-sm font-medium">
+                <i class="fas fa-object-group"></i> Passer en mode Builder
+            </a>
+        </div>
+
         <form action="{{ route('admin.pages.store') }}" method="POST">
             @csrf
 
