@@ -45,17 +45,30 @@
         <div class="flex flex-1 overflow-hidden">
             <aside class="w-full sm:w-1/3 md:w-1/5 max-w-xs bg-muted p-4 border-r overflow-y-auto">
                 <h2 class="text-lg font-semibold mb-4">Blocs disponibles</h2>
-                <template x-if="availableBlocks.length === 0">
-                    <p class="text-muted-foreground italic">Aucun bloc disponible.</p>
+
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button class="btn btn-sm" :class="{ 'btn-primary': filterCategory === 'all' }" @click="filterCategory = 'all'">Tous</button>
+                    <template x-for="cat in blockCategories" :key="cat">
+                        <button class="btn btn-sm" :class="{ 'btn-primary': filterCategory === cat }" @click="filterCategory = cat" x-text="cat"></button>
+                    </template>
+                </div>
+
+                <template x-if="filteredBlocks.length === 0">
+                    <p class="text-muted-foreground italic">Aucun bloc trouvé.</p>
                 </template>
-                <template x-for="(block, idx) in availableBlocks" :key="idx">
+
+                <template x-for="(block, idx) in filteredBlocks" :key="idx">
                     <button @click.prevent="addBlock(block.type)"
-                            class="w-full bg-background border hover:bg-accent hover:text-accent-foreground rounded p-2 mb-2 text-left flex items-center gap-2">
-                        <span x-text="block.icon"></span>
-                        <span x-text="block.label"></span>
+                            class="w-full bg-white border hover:bg-accent hover:text-accent-foreground rounded-lg p-3 mb-2 text-left flex items-center gap-3 shadow-sm transition hover:shadow-md">
+                        <span class="text-xl" x-text="block.icon"></span>
+                        <div>
+                            <p class="font-semibold" x-text="block.label"></p>
+                            <p class="text-xs text-muted-foreground" x-text="block.category"></p>
+                        </div>
                     </button>
                 </template>
             </aside>
+
 
             <main class="flex-1 relative bg-background overflow-auto">
                 <div id="builder-preview-wrapper" class="relative h-full min-h-[calc(100vh-250px)]">

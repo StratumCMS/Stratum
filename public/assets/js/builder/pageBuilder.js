@@ -14,6 +14,16 @@ export default function pageBuilder() {
         gridVisible: false,
         openShortcuts: false,
         availableBlocks: [],
+        filterCategory: 'all',
+
+        get filteredBlocks() {
+            if (this.filterCategory === 'all') return this.availableBlocks;
+            return this.availableBlocks.filter(b => b.category === this.filterCategory);
+        },
+
+        get blockCategories() {
+            return [...new Set(this.availableBlocks.map(b => b.category))];
+        },
 
         initBuilder() {
             this.availableBlocks = window.availableBlocks ?? [];

@@ -73,6 +73,7 @@ class BuilderManager
                 'type' => $key,
                 'label' => $config['label'] ?? ucfirst($key),
                 'icon' => $config['icon'] ?? '',
+                'category' => $config['category'] ?? 'Divers',
                 'settings_schema' => $config['settings_schema'] ?? [],
             ])
             ->values()
@@ -88,23 +89,27 @@ class BuilderManager
 
             $relativePath = str_replace(resource_path('views') . DIRECTORY_SEPARATOR, '', $file->getPathname());
             $viewPath = str_replace(['/', '.blade.php'], ['.', ''], $relativePath);
-
             $key = str_replace(['/', '\\'], '-', $file->getRelativePathname());
             $key = str_replace('.blade.php', '', $key);
-
             $jsonPath = str_replace('.blade.php', '.json', $file->getPathname());
 
-            $settingsSchema = [];
+            $schema = [];
+            $meta = [];
+
             if (File::exists($jsonPath)) {
-                $schemaContent = File::get($jsonPath);
-                $settingsSchema = json_decode($schemaContent, true) ?? [];
+                $json = json_decode(File::get($jsonPath), true);
+                $meta['label'] = $json['label'] ?? ucfirst(basename($key));
+                $meta['icon'] = $json['icon'] ?? '🧩';
+                $meta['category'] = $json['category'] ?? 'Divers';
+                $schema = $json['settings_schema'] ?? $json;
             }
 
             $this->registerBlock($key, [
                 'view' => $viewPath,
-                'label' => ucfirst(basename($key)),
-                'icon' => '🧩',
-                'settings_schema' => $settingsSchema,
+                'label' => $meta['label'],
+                'icon' => $meta['icon'],
+                'category' => $meta['category'],
+                'settings_schema' => $schema,
             ]);
         }
     }
