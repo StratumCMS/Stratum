@@ -14,18 +14,19 @@ export default function pageBuilder() {
         gridVisible: false,
         openShortcuts: false,
         availableBlocks: [],
-        filterCategory: 'all',
+        filteredCategory: 'all',
+        searchQuery: '',
 
         get filteredBlocks() {
-            if (this.filterCategory === 'all') return this.availableBlocks;
-            return this.availableBlocks.filter(b => b.category === this.filterCategory);
+            return this.availableBlocks
+                .filter(b => this.filteredCategory === 'all' || b.category === this.filteredCategory)
+                .filter(b => b.label.toLowerCase().includes(this.searchQuery.toLowerCase()));
         },
 
-        get blockCategories() {
-            return [...new Set(this.availableBlocks.map(b => b.category))];
-        },
 
         initBuilder() {
+            console.log('[Builder] Initialisation...');
+            console.log('[Builder] Blocs disponibles :', window.availableBlocks);
             this.availableBlocks = window.availableBlocks ?? [];
             this.updatePreview();
             this.$nextTick(() => this.initSortable());

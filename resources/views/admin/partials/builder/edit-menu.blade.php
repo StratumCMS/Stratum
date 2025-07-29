@@ -2,10 +2,10 @@
      class="fixed top-0 right-0 w-full sm:w-80 h-full bg-white dark:bg-background border-l shadow-lg z-50 p-4 overflow-y-auto">
     <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-semibold">Modifier le bloc</h3>
-        <button @click="sidebarOpen = false" class="text-gray-500 hover:text-black">&times;</button>
+        <button @click="editMenu.close()" class="text-gray-500 hover:text-black">&times;</button>
     </div>
 
-    <template x-if="editingBlock">
+    <template x-if="editMenu.editingBlock">
         <div class="space-y-4">
             <template x-for="(schema, key) in editMenu.currentSchema" :key="key">
                 <div class="space-y-1">
@@ -34,7 +34,7 @@
                     <!-- SELECT -->
                     <template x-if="schema.type === 'select'">
                         <select class="input" x-model="editMenu.editingBlock.settings[key]">
-                            <template x-for="opt in schema.options">
+                            <template x-for="opt in schema.options" :key="opt.value">
                                 <option :value="opt.value" x-text="opt.label"></option>
                             </template>
                         </select>
@@ -50,7 +50,7 @@
                         <div>
                             <input type="text" class="input mb-2" placeholder="URL de l'image"
                                    x-model="editMenu.editingBlock.settings[key]">
-                            <img :src="editMenu.editingBlock.settings[key]" class="w-full rounded border" x-show="editingBlock.settings[key]">
+                            <img :src="editMenu.editingBlock.settings[key]" class="w-full rounded border" x-show="editMenu.editingBlock.settings[key]">
                         </div>
                     </template>
 
@@ -82,7 +82,7 @@
     </template>
 
     <div class="flex justify-end mt-4 gap-2">
-        <button class="btn-outline" @click="editMenu.close">Annuler</button>
-        <button class="btn-primary" @click="editMenu.apply">Appliquer</button>
+        <button class="btn-outline" @click="editMenu.close()">Annuler</button>
+        <button class="btn-primary" @click="editMenu.apply()">Appliquer</button>
     </div>
 </div>

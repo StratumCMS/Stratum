@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Page;
+use App\Services\BuilderManager;
 use Illuminate\Http\Request;
 
 class PageController extends Controller
@@ -33,7 +34,9 @@ class PageController extends Controller
     public function createBuilder()
     {
         $templates = $this->getTemplates();
-        return view('admin.pages-builder-create', compact('templates'));
+        $builder = new BuilderManager();
+        $availableBlocks = $builder->allBlockConfigs();
+        return view('admin.pages-builder-create', compact('templates', 'availableBlocks'));
     }
 
     public function createAdvanced()

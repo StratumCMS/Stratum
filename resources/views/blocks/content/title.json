@@ -1,0 +1,47 @@
+{
+    "label": "Titre",
+    "icon": "🔠",
+    "category": "Contenu",
+    "settings_schema": {
+        "text": {
+            "type": "text",
+            "label": "Texte",
+            "default": "Bienvenue sur notre site"
+        },
+        "text_color": {
+            "type": "color",
+            "label": "Couleur du texte",
+            "default": "#111111"
+        },
+        "font_size": {
+            "type": "text",
+            "label": "Taille du texte",
+            "default": "2rem"
+        },
+        "text_align": {
+            "type": "select",
+            "label": "Alignement",
+            "options": [
+                { "label": "Gauche", "value": "left" },
+                { "label": "Centré", "value": "center" },
+                { "label": "Droite", "value": "right" }
+            ],
+            "default": "center"
+        },
+        "padding": {
+            "type": "text",
+            "label": "Padding",
+            "default": "1rem"
+        },
+        "margin": {
+            "type": "text",
+            "label": "Margin",
+            "default": "0 0 2rem"
+        },
+        "animation": {
+            "type": "text",
+            "label": "Animation CSS",
+            "default": "none"
+        }
+    }
+}

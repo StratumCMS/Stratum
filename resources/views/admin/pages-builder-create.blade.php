@@ -2,6 +2,10 @@
 
 @section('title', 'Créer une page (Builder)')
 
+<script>
+    window.availableBlocks = @json($availableBlocks);
+</script>
+
 @section('content')
     <div class="flex flex-col h-screen overflow-hidden"
          x-data="pageBuilder()"
@@ -44,12 +48,20 @@
 
         <div class="flex flex-1 overflow-hidden">
             <aside class="w-full sm:w-1/3 md:w-1/5 max-w-xs bg-muted p-4 border-r overflow-y-auto">
-                <h2 class="text-lg font-semibold mb-4">Blocs disponibles</h2>
+                <div class="mb-4">
+                    <input type="text" x-model="searchQuery" placeholder="Rechercher un bloc..."
+                           class="w-full h-9 px-3 rounded-md border border-border text-sm focus:outline-none focus:ring-primary transition" />
+                </div>
 
                 <div class="flex flex-wrap gap-2 mb-4">
-                    <button class="btn btn-sm" :class="{ 'btn-primary': filterCategory === 'all' }" @click="filterCategory = 'all'">Tous</button>
-                    <template x-for="cat in blockCategories" :key="cat">
-                        <button class="btn btn-sm" :class="{ 'btn-primary': filterCategory === cat }" @click="filterCategory = cat" x-text="cat"></button>
+                    <button @click="filteredCategory = 'all'"
+                            :class="filteredCategory === 'all' ? 'bg-primary text-white' : 'bg-card text-foreground'"
+                            class="text-sm px-3 py-1 rounded-md border border-border">Tous</button>
+                    <template x-for="category in [...new Set(availableBlocks.map(b => b.category))]" :key="category">
+                        <button @click="filteredCategory = category"
+                                :class="filteredCategory === category ? 'bg-primary text-white' : 'bg-card text-foreground'"
+                                class="text-sm px-3 py-1 rounded-md border border-border"
+                                x-text="category"></button>
                     </template>
                 </div>
 
@@ -59,12 +71,9 @@
 
                 <template x-for="(block, idx) in filteredBlocks" :key="idx">
                     <button @click.prevent="addBlock(block.type)"
-                            class="w-full bg-white border hover:bg-accent hover:text-accent-foreground rounded-lg p-3 mb-2 text-left flex items-center gap-3 shadow-sm transition hover:shadow-md">
-                        <span class="text-xl" x-text="block.icon"></span>
-                        <div>
-                            <p class="font-semibold" x-text="block.label"></p>
-                            <p class="text-xs text-muted-foreground" x-text="block.category"></p>
-                        </div>
+                            class="w-full flex items-center gap-2 px-3 py-2 mb-2 rounded bg-background border hover:bg-accent hover:text-accent-foreground transition text-left">
+                        <span x-text="block.icon" class="text-lg"></span>
+                        <span class="text-sm font-medium" x-text="block.label"></span>
                     </button>
                 </template>
             </aside>

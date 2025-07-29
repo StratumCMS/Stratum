@@ -12,13 +12,15 @@ class BuilderManager
 
     public function __construct()
     {
-        $this->loadBlocksFromDirectory(resource_path('blocks'));
+        $this->loadBlocksFromDirectory(resource_path('views/blocks'));
     }
 
     public function registerBlock(string $key, array $config): void
     {
+        Log::info("[Builder] Enregistrement du bloc : $key", $config);
         $this->blocks[$key] = $config;
     }
+
 
     public function getAvailableBlocks(): array
     {
@@ -37,6 +39,12 @@ class BuilderManager
     public function renderBlock(array $block): string
     {
         $type = $block['type'] ?? null;
+
+        if ($type === 'root') {
+            return collect($block['children'] ?? [])
+                ->map(fn($child) => $this->renderBlock($child))
+                ->join('');
+        }
 
         if (!$type || !isset($this->blocks[$type])) {
             Log::warning("Bloc non reconnu ou invalide : " . json_encode($block));
@@ -58,7 +66,7 @@ class BuilderManager
                 ->join('');
         }
 
-        return view($view, ['settings' => $settings])->render();
+        return view($view, $settings)->render();
     }
 
     public function getBlockSchema(string $type): ?array
@@ -82,17 +90,23 @@ class BuilderManager
 
     protected function loadBlocksFromDirectory(string $directory): void
     {
+        if (!File::isDirectory($directory)) {
+            Log::warning("[Builder] Répertoire introuvable : $directory");
+            return;
+        }
+
         $bladeFiles = File::allFiles($directory);
 
         foreach ($bladeFiles as $file) {
-            if ($file->getExtension() !== 'blade.php') continue;
+            if ($file->getExtension() !== 'php' || !str_ends_with($file->getFilename(), '.blade.php')) {
+                continue;
+            }
 
-            $relativePath = str_replace(resource_path('views') . DIRECTORY_SEPARATOR, '', $file->getPathname());
-            $viewPath = str_replace(['/', '.blade.php'], ['.', ''], $relativePath);
-            $key = str_replace(['/', '\\'], '-', $file->getRelativePathname());
-            $key = str_replace('.blade.php', '', $key);
+            $relative = str_replace(resource_path('views' . DIRECTORY_SEPARATOR), '', $file->getRealPath());
+            $viewPath = str_replace(['/', '\\'], '.', str_replace('.blade.php', '', $relative));
+            $key = str_replace(['/', '\\'], '.', str_replace('.blade.php', '', $file->getRelativePathname()));
+
             $jsonPath = str_replace('.blade.php', '.json', $file->getPathname());
-
             $schema = [];
             $meta = [];
 
@@ -101,16 +115,17 @@ class BuilderManager
                 $meta['label'] = $json['label'] ?? ucfirst(basename($key));
                 $meta['icon'] = $json['icon'] ?? '🧩';
                 $meta['category'] = $json['category'] ?? 'Divers';
-                $schema = $json['settings_schema'] ?? $json;
+                $schema = $json['settings_schema'] ?? [];
             }
 
             $this->registerBlock($key, [
                 'view' => $viewPath,
-                'label' => $meta['label'],
-                'icon' => $meta['icon'],
-                'category' => $meta['category'],
+                'label' => $meta['label'] ?? ucfirst(basename($key)),
+                'icon' => $meta['icon'] ?? '🧩',
+                'category' => $meta['category'] ?? 'Divers',
                 'settings_schema' => $schema,
             ]);
         }
     }
+
 }
