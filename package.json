@@ -2,7 +2,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "dev": "vite",
+        "dev": "vite build",
         "dev:install": "tailwindcss -c tailwind.install.config.js -i ./resources/css/install.css -o ./public/build/assets/install.css",
         "dev:admin": "tailwindcss -c tailwind.admin.config.js -i ./resources/css/admin.css -o ./public/build/assets/admin.css",
         "dev:default": "tailwindcss -c tailwind.default.config.js -i ./resources/css/default.css -o ./public/build/assets/default.css",

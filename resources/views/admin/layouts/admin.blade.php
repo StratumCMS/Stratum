@@ -14,10 +14,9 @@
     </script>
 
     <title>{{ site_name() ?? "StratumCMS" }} - @yield('title', 'Admin Dashboard')</title>
-    <link href="{{ asset('build/assets/admin.css') }}" rel="stylesheet">
+    @vite('resources/css/admin.css')
     <script src="https://kit.fontawesome.com/91664c67de.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ asset('assets/js/admin.js') }}"></script>
 </head>
 <body class="min-h-screen flex w-full bg-background text-foreground">
 
