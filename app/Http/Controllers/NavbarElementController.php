@@ -23,37 +23,41 @@ class NavbarElementController extends Controller
         return view('admin.navbar', compact('items'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        $allRoutes = collect(Route::getRoutes());
+        $allRoutes = collect(Route::getRoutes()->getRoutes());
 
-        // Filtrer les routes des modules
         $moduleRoutes = $allRoutes
-            ->filter(fn($route) =>
-                str_starts_with($route->getAction('namespace') ?? '', 'Modules\\')
-                || str_contains($route->getActionName(), 'Modules\\')
-            )
-            ->filter(fn($route) => $route->getName())
-            ->map(fn($route) => [
-                'name' => $route->getName(),
-                'uri' => $route->uri(),
+            ->filter(function ($route) {
+                $controller = $route->action['controller'] ?? null;
+                if (!$controller) {
+                    return false;
+                }
+
+                $controller = ltrim($controller, '\\');
+                return Str::startsWith($controller, 'Modules\\');
+            })
+
+            ->filter(fn ($route) => $route->getName())
+            ->map(fn ($route) => [
+                'name'    => $route->getName(),
+                'uri'     => $route->uri(),
+                'methods' => $route->methods(),
             ])
             ->values();
 
-        $pages = Page::pluck('title', 'slug');
-        $articles = Article::where('is_published', true)->pluck('title', 'id');
+        $pages     = Page::pluck('title', 'slug');
+        $articles  = Article::where('is_published', true)->pluck('title', 'id');
         $dropdowns = NavbarElement::where('type', 'dropdown')->get();
 
         return view('admin.create-navbar', [
-            'modules' => $moduleRoutes,
-            'pages' => $pages,
-            'articles' => $articles,
+            'modules'   => $moduleRoutes,
+            'pages'     => $pages,
+            'articles'  => $articles,
             'dropdowns' => $dropdowns,
         ]);
     }
+
 
     /**
      * Store a newly created resource in storage.
