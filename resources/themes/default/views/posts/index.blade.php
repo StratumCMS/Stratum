@@ -1,4 +1,4 @@
-@extends('theme::layout')
+@extends('theme::layout.app')
 
 @section('title', 'Articles')
 
@@ -58,7 +58,7 @@
                 </div>
 
                 <div class="text-center">
-                    <x-pagination :totalPages="$totalPages" :currentPage="$currentPage" />
+                    <x-pagination :totalPages="$totalPages" :currentPage="$currentPage"/>
                 </div>
             @endif
         </div>

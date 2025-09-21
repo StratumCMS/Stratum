@@ -1,0 +1,13 @@
+{
+  "resources/themes/default/assets/css/app.css": {
+    "file": "assets/app-DoA8DtIH.css",
+    "src": "resources/themes/default/assets/css/app.css",
+    "isEntry": true
+  },
+  "resources/themes/default/assets/js/app.js": {
+    "file": "assets/app-DaK7yUu6.js",
+    "name": "app",
+    "src": "resources/themes/default/assets/js/app.js",
+    "isEntry": true
+  }
+}

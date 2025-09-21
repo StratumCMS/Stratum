@@ -47,14 +47,13 @@ if (!function_exists('theme_asset')) {
                 $theme = Theme::where('active', true)->first();
 
                 if ($theme) {
-                    return asset("themes-assets/{$theme->slug}/assets/" . ltrim($path, '/'));
+                    return asset("themes/{$theme->slug}/assets/" . ltrim($path, '/'));
                 }
             }
-        } catch (\Throwable $e) {
-}
+        } catch (\Throwable $e) {}
 
-return asset("themes/default/assets/" . ltrim($path, '/'));
-}
+        return asset("themes/default/assets/" . ltrim($path, '/'));
+    }
 }
 
 if (!function_exists('theme_config')) {

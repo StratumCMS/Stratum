@@ -1,0 +1,17 @@
+0 verbose cli C:\nvm4w\nodejs\node.exe C:\nvm4w\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.8.2
+2 info using node@v20.19.4
+3 silly config load:file:C:\Users\prima\AppData\Local\nvm\v20.19.4\node_modules\npm\npmrc
+4 silly config load:file:C:\laragon\www\theme-stratum\.npmrc
+5 silly config load:file:C:\Users\prima\.npmrc
+6 silly config load:file:C:\nvm4w\nodejs\etc\npmrc
+7 verbose title npm config list
+8 verbose argv "config" "list" "--json"
+9 verbose logfile logs-max:10 dir:C:\laragon\www\theme-stratum\resources\js\.cache\_logs\2025-09-11T13_12_06_796Z-
+10 verbose logfile C:\laragon\www\theme-stratum\resources\js\.cache\_logs\2025-09-11T13_12_06_796Z-debug-0.log
+11 verbose cwd C:\laragon\www\theme-stratum\resources\js
+12 verbose os Windows_NT 10.0.26100
+13 verbose node v20.19.4
+14 verbose npm  v10.8.2
+15 verbose exit 0
+16 info ok
