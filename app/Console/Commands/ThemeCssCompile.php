@@ -8,178 +8,171 @@ use Symfony\Component\Process\Process;
 
 class ThemeCssCompile extends Command
 {
-    protected $signature   = 'theme:css:compile {slug : Slug du thème} {--minify : Post-minification via lightningcss/terser}';
-    protected $description = 'Build des assets du thème via Vite (vite.config.js du thème), avec post-minification optionnelle (lightningcss/terser).';
+    protected $signature = 'theme:css:compile
+        {slug : Slug du thème}
+        {--minify : Post-minification via lightningcss/terser}
+        {--framework= : Force le framework (tailwind|bootstrap5|materialui|customCSS), sinon lu depuis theme.json}
+        {--tw-adapter=auto : auto|on|off → inclure l’adapter Tailwind (utilities-only, sans preflight) si le thème n’est pas Tailwind}';
+
+    protected $description = 'Build Vite du thème, avec Tailwind adapter optionnel pour rendre les classes Tailwind des vues de modules sous un thème non-Tailwind.';
 
     public function handle(): int
     {
-        $slug      = $this->argument('slug');
-        $withMin   = (bool) $this->option('minify');
-        $themePath = resource_path("themes/{$slug}");
+        $slug       = (string) $this->argument('slug');
+        $withMin    = (bool)   $this->option('minify');
+        $framework  = (string) ($this->option('framework') ?? '');
+        $adapterOpt = strtolower((string) ($this->option('tw-adapter') ?: 'auto'));
 
-        if (!File::exists($themePath)) {
-            $this->error("❌ Le thème '{$slug}' n'existe pas (recherché: {$themePath}).");
-            return 1;
-        }
-
+        $themePath  = resource_path("themes/{$slug}");
         $viteConfig = "{$themePath}/vite.config.js";
+
+        if (!File::isDirectory($themePath)) {
+            $this->error("❌ Thème introuvable: {$themePath}");
+            return 1;
+        }
         if (!File::exists($viteConfig)) {
-            $this->error("❌ Aucun vite.config.js trouvé pour le thème '{$slug}'. Chaque thème (tailwind, bootstrap5, materialUI, customCSS) doit fournir son propre Vite config : {$viteConfig}");
+            $this->error("❌ vite.config.js manquant : {$viteConfig}");
             return 1;
         }
-
         if (!File::exists(base_path('node_modules'))) {
-            $this->warn("ℹ️  node_modules absent à la racine. Lance `npm i` / `pnpm i` / `yarn` avant le build.");
+            $this->warn("ℹ️  node_modules manquant. Lance `npm i` / `pnpm i` / `yarn`.");
         }
 
-        $cmd = ['npx', 'vite', 'build', '--config', $viteConfig, '--minify=false'];
+        $fw = $framework ?: $this->detectFrameworkFromThemeJson($themePath) ?: 'tailwind';
 
-        $this->info("🚀 Build Vite du thème '{$slug}' (minify=false)...");
-        $build = new Process($cmd, base_path(), null, null, 600);
-        $build->run(function ($type, $buffer) {
-            echo $buffer;
-        });
+        $useAdapter = match ($adapterOpt) {
+            'on'  => true,
+            'off' => false,
+            default /* auto */ => $fw !== 'tailwind',
+        };
 
-        if (!$build->isSuccessful()) {
-            $this->error("❌ Échec du build Vite pour le thème '{$slug}'.");
-            $this->line(trim($build->getErrorOutput()));
+        if ($useAdapter) {
+            $this->ensureAdapterFiles($themePath);
+            if (!File::exists(base_path('node_modules/tailwindcss'))) {
+                $this->warn("ℹ️  L’adapter nécessite tailwindcss/autoprefixer en devDependencies.");
+            }
+        }
+
+        $env = [
+            'VITE_TW_ADAPTER' => $useAdapter ? '1' : '0',
+            'NODE_ENV'        => 'production',
+        ];
+        $cmd = ['npx','vite','build','--config',$viteConfig,'--minify=false'];
+
+        $this->info("🚀 Build Vite du thème '{$slug}' (framework={$fw}, adapter=".($useAdapter?'ON':'OFF').") …");
+        $p = new Process($cmd, base_path(), $env, null, 900);
+        $p->run(function ($type, $buffer) { echo $buffer; });
+
+        if (!$p->isSuccessful()) {
+            $this->error("❌ Build Vite échoué.");
+            $this->line(trim($p->getErrorOutput()));
             return 1;
         }
-
-        $this->info("✅ Build Vite terminé.");
+        $this->info("✅ Build terminé.");
 
         if ($withMin) {
             $manifest = public_path("themes/{$slug}/manifest.json");
             if (!File::exists($manifest)) {
-                $this->error("❌ manifest.json introuvable : {$manifest}. Vérifie buildDirectory dans le vite.config.js du thème.");
+                $this->error("❌ manifest.json introuvable : {$manifest}");
                 return 1;
             }
-
             $files = $this->collectBuiltFilesFromManifest($manifest);
-            if (empty($files)) {
-                $this->warn("ℹ️  Aucun fichier CSS/JS détecté dans le manifest. Rien à minifier.");
-                return 0;
-            }
+            if (!$files) { $this->warn("ℹ️  Aucun fichier CSS/JS détecté."); return 0; }
 
-            $this->info("🔧 Post-minification (lightningcss / terser)...");
+            $this->info("🔧 Post-minification (lightningcss / terser) …");
             $okAll = true;
-
-            foreach ($files as $absPath) {
-                if (!File::exists($absPath)) {
-                    $this->warn("⏭️  Fichier manquant, ignoré : {$absPath}");
-                    continue;
-                }
-
-                if (str_ends_with($absPath, '.css')) {
-                    $ok = $this->minifyCssLightning($absPath);
-                } elseif (str_ends_with($absPath, '.js')) {
-                    $ok = $this->minifyJsTerser($absPath);
-                } else {
-                    $ok = true;
-                }
-
+            foreach ($files as $abs) {
+                if (!File::exists($abs)) { $this->warn("⏭️  Introuvable : {$abs}"); continue; }
+                $ok = true;
+                if (str_ends_with($abs, '.css')) $ok = $this->minifyCssLightning($abs);
+                elseif (str_ends_with($abs, '.js')) $ok = $this->minifyJsTerser($abs);
                 $okAll = $okAll && $ok;
             }
-
-            if (!$okAll) {
-                $this->error("❌ Une ou plusieurs minifications ont échoué.");
-                return 1;
-            }
-
-            $this->info("✅ Post-minification terminée (fichiers écrasés en place).");
+            if (!$okAll) { $this->error("❌ Minification partielle échouée."); return 1; }
+            $this->info("✅ Minification OK.");
         }
 
-        $this->info("🏁 Terminé. Manifest & assets dans public/themes/{$slug}.");
+        $this->info("🏁 Terminé. Assets dans public/themes/{$slug}.");
         return 0;
+    }
+
+    protected function detectFrameworkFromThemeJson(string $themePath): ?string
+    {
+        $json = "{$themePath}/theme.json";
+        if (!File::exists($json)) return null;
+        try {
+            $data = json_decode(File::get($json), true, 512, JSON_THROW_ON_ERROR);
+            $fw = strtolower((string)($data['framework'] ?? ''));
+            return in_array($fw, ['tailwind','bootstrap5','materialui','customcss'], true) ? $fw : null;
+        } catch (\Throwable) { return null; }
+    }
+
+    protected function ensureAdapterFiles(string $themePath): void
+    {
+        $entry = "{$themePath}/assets/css/tw-adapter.entry.css";
+        if (!File::exists($entry)) {
+            File::put($entry, "/* Tailwind adapter (utilities-only, sans preflight) */\n@tailwind utilities;\n");
+        }
+        $cfg = "{$themePath}/tailwind-adapter.config.cjs";
+        if (!File::exists($cfg)) {
+            File::put($cfg, <<<CJS
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './views/**/*.blade.php',
+    '../../../modules/*/resources/views/**/*.blade.php',
+    '../../../resources/views/**/*.blade.php',
+  ],
+  corePlugins: { preflight: false },
+  theme: {
+    extend: {
+      colors: {
+        primary: 'rgb(var(--twc-primary, 59 130 246) / <alpha-value>)',
+        muted:   'rgb(var(--twc-muted, 100 116 139) / <alpha-value>)',
+      },
+      borderRadius: { lg: 'var(--radius, 12px)' },
+    }
+  },
+  plugins: [],
+};
+CJS);
+        }
     }
 
     protected function collectBuiltFilesFromManifest(string $manifestPath): array
     {
         $json = json_decode(File::get($manifestPath), true, 512, JSON_THROW_ON_ERROR);
-
-        $relatives = [];
-        $push = function (?string $rel) use (&$relatives) {
-            if (!$rel) return;
-            $rel = ltrim(str_replace(['\\', '..'], ['/', ''], $rel), '/');
-            $relatives[$rel] = true;
+        $rel = [];
+        $push = function ($p) use (&$rel) {
+            if (!$p) return; $p = ltrim(str_replace(['\\','..'],['/',''],$p),'/'); $rel[$p] = true;
         };
-
-        foreach ($json as $entry) {
-            if (isset($entry['file'])) {
-                $push($entry['file']);
-            }
-            if (!empty($entry['css']) && is_array($entry['css'])) {
-                foreach ($entry['css'] as $css) {
-                    $push($css);
-                }
-            }
-            if (!empty($entry['imports']) && is_array($entry['imports'])) {
-                foreach ($entry['imports'] as $importKey) {
-                    if (!isset($json[$importKey])) {
-                        continue;
-                    }
-                    $imp = $json[$importKey];
-                    if (isset($imp['file'])) {
-                        $push($imp['file']);
-                    }
-                    if (!empty($imp['css']) && is_array($imp['css'])) {
-                        foreach ($imp['css'] as $css) {
-                            $push($css);
-                        }
-                    }
-                }
+        foreach ($json as $e) {
+            if (isset($e['file'])) $push($e['file']);
+            if (!empty($e['css'])) foreach ((array)$e['css'] as $c) $push($c);
+            if (!empty($e['imports'])) foreach ((array)$e['imports'] as $k) {
+                if (!isset($json[$k])) continue; $imp = $json[$k];
+                if (isset($imp['file'])) $push($imp['file']);
+                if (!empty($imp['css'])) foreach ((array)$imp['css'] as $c) $push($c);
             }
         }
-
-        $abs = [];
-        foreach (array_keys($relatives) as $rel) {
-            $abs[] = public_path($rel);
-        }
-        return $abs;
+        return array_map(fn($p) => public_path($p), array_keys($rel));
     }
 
     protected function minifyCssLightning(string $absPath): bool
     {
-        $cmd = ['npx', 'lightningcss', '-m', '--targets', 'last 2 versions', '-o', $absPath, $absPath];
-
-        $p = new Process($cmd, base_path(), null, null, 120);
-        $p->run(function ($type, $buffer) {
-            echo $buffer;
-        });
-
-        if (!$p->isSuccessful()) {
-            $this->error("❌ Minification CSS échouée : {$absPath}");
-            $this->line(trim($p->getErrorOutput()));
-            return false;
-        }
-        $this->line("✅ CSS minifié : {$absPath}");
-        return true;
+        $cmd = ['npx','lightningcss','-m','--targets','last 2 versions','-o',$absPath,$absPath];
+        $p = new Process($cmd, base_path(), null, null, 180);
+        $p->run(fn($t,$b) => print $b);
+        if (!$p->isSuccessful()) { $this->error("❌ CSS minify KO: {$absPath}"); $this->line(trim($p->getErrorOutput())); return false; }
+        $this->line("✅ CSS minifié : {$absPath}"); return true;
     }
 
     protected function minifyJsTerser(string $absPath): bool
     {
-        $cmd = [
-            'npx', 'terser', $absPath,
-            '-o', $absPath,
-            '-c',
-            '-m',
-            '--ecma', '2019',
-            '--toplevel',
-        ];
-
-        // $cmd[] = '--module';
-
-        $p = new Process($cmd, base_path(), null, null, 120);
-        $p->run(function ($type, $buffer) {
-            echo $buffer;
-        });
-
-        if (!$p->isSuccessful()) {
-            $this->error("❌ Minification JS échouée : {$absPath}");
-            $this->line(trim($p->getErrorOutput()));
-            return false;
-        }
-        $this->line("✅ JS minifié : {$absPath}");
-        return true;
+        $cmd = ['npx','terser',$absPath,'-o',$absPath,'-c','-m','--ecma','2019','--toplevel'];
+        $p = new Process($cmd, base_path(), null, null, 180);
+        $p->run(fn($t,$b) => print $b);
+        if (!$p->isSuccessful()) { $this->error("❌ JS minify KO: {$absPath}"); $this->line(trim($p->getErrorOutput())); return false; }
+        $this->line("✅ JS minifié : {$absPath}"); return true;
     }
 }
