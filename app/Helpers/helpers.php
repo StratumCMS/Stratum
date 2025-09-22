@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Module;
 use App\Models\NavbarElement;
 use App\Models\Setting;
 use App\Models\Theme;
@@ -129,3 +130,51 @@ if (!function_exists('safe_url')) {
         return url($url);
     }
 }
+
+
+if (!function_exists('plugin_has')){
+    function plugin_has(string $slug): bool {
+        try {
+            if (!file_exists(storage_path('installed') || !Schema::hasTable('modules'))){
+                return false;
+            }
+
+            $isActive = Module::where('slug', $slug)->where('active', true)->exists();
+            if (!$isActive){
+                return false;
+            }
+
+            return app()->bound('plugin.$slug');
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+}
+
+
+if (!function_exists('plugin_load')) {
+
+    function plugin_load(string $slug) {
+        if (!plugin_has($slug)) {
+            throw new \RuntimeException("Le plugin [$slug] n'est pas actif ou n'a pas exposé d'API.");
+        }
+
+        return app('plugin.$slug');
+    }
+}
+
+if (!function_exists('plugin_call')){
+
+    function plugin_call(string $slug, string $method, ...$args){
+        $api = plugin_load($slug);
+
+        if (!method_exists($api, $method)) {
+            $class = is_object($api) ? get_class($api) : (string) $api;
+            throw new \RuntimeException("La méthode [$method] n'existe pas sur l'API $class du plugin [$slug].");
+        }
+
+        return $api->{$method}(...$args);
+    }
+
+}
+
