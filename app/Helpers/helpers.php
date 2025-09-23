@@ -135,16 +135,17 @@ if (!function_exists('safe_url')) {
 if (!function_exists('plugin_has')){
     function plugin_has(string $slug): bool {
         try {
-            if (!file_exists(storage_path('installed') || !Schema::hasTable('modules'))){
+            if (!file_exists(storage_path('installed')) || !Schema::hasTable('modules')) {
                 return false;
             }
+
 
             $isActive = Module::where('slug', $slug)->where('active', true)->exists();
             if (!$isActive){
                 return false;
             }
 
-            return app()->bound('plugin.$slug');
+            return app()->bound('plugin.'.$slug);
         } catch (\Throwable $e) {
             return false;
         }
@@ -159,7 +160,7 @@ if (!function_exists('plugin_load')) {
             throw new \RuntimeException("Le plugin [$slug] n'est pas actif ou n'a pas exposé d'API.");
         }
 
-        return app('plugin.$slug');
+        return app('plugin.'.$slug);
     }
 }
 

@@ -14,7 +14,12 @@ class ModuleMigrator
 
         if (File::isDirectory($path)) {
             Log::info("🔧 Migrating module: $slug");
-            Artisan::call('migrate', ['--path' => "modules/{$slug}/database/migrations", '--force' => true]);
+            Artisan::call('migrate', [
+                '--path'     => base_path("modules/{$slug}/database/migrations"),
+                '--realpath' => true,
+                '--force'    => true,
+            ]);
+
         }
     }
 
@@ -24,7 +29,12 @@ class ModuleMigrator
 
         if (File::isDirectory($path)) {
             Log::info("↩️ Rolling back module: $slug");
-            Artisan::call('migrate:rollback', ['--path' => "modules/{$slug}/database/migrations", '--force' => true]);
+            Artisan::call('migrate:rollback', [
+                '--path'     => base_path("modules/{$slug}/database/migrations"),
+                '--realpath' => true,
+                '--force'    => true,
+            ]);
+
         }
     }
 }

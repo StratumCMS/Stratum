@@ -8,6 +8,7 @@ use App\Helpers\LicenseServer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class ModuleController extends Controller
@@ -227,13 +228,16 @@ class ModuleController extends Controller
 
         $migrationPath = "{$modulePath}/database/migrations";
         if (File::isDirectory($migrationPath)) {
-            \Artisan::call('migrate', [
-                '--path' => str_replace(base_path() . '/', '', $migrationPath),
-                '--force' => true,
-            ]);
+            $real = realpath($migrationPath);
+            if ($real !== false) {
+                $exit = \Artisan::call('migrate', [
+                    '--path' => $real,
+                    '--realpath' => true,
+                    '--force' => true,
+                ]);
+            }
         }
 
-        // 3. Clear caches pour que tout se mette à jour
         \Artisan::call('config:clear');
         \Artisan::call('route:clear');
         \Artisan::call('view:clear');
