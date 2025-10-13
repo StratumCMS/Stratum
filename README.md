@@ -78,7 +78,7 @@ Votre CMS est maintenant accessible à l’adresse [http://localhost:8000](http:
 
 ## 📚 **Documentation**
 
-La documentation complète (installation, configuration, création de thèmes et modules) est disponible [ici](https://stratum-docs.velyorix.com).
+La documentation complète (installation, configuration, création de thèmes et modules) est disponible [ici](https://stratumcms.com/documentation).
 
 ---
 
@@ -103,4 +103,4 @@ Stratum est distribué sous la licence MIT. Consultez le fichier [LICENSE](./LIC
 ---
 
 ## 💡 **Idées de modules/thèmes ?**
-Si vous avez des idées pour des thèmes ou modules, ou si vous voulez contribuer à l’écosystème Stratum, contactez-nous via [contact@velyorix.com](mailto:contact@velyorix.com).
+Si vous avez des idées pour des thèmes ou modules, ou si vous voulez contribuer à l’écosystème Stratum, contactez-nous via [Discord](https://discord.gg/tFPz48bPdz).
