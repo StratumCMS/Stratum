@@ -1,4 +1,4 @@
-@extends('theme::layout.app')
+@extends('theme::layouts.app')
 
 @section('content')
     @php
@@ -32,6 +32,7 @@
           ],
           'image'  => theme_config('about.image')  ?? theme_asset('images/about.png'),
         ];
+
     @endphp
 
     <section class="relative py-20 lg:py-32 overflow-hidden bg-gradient-hero">
@@ -44,14 +45,16 @@
                     {{ $h['subtitle'] }}
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                    <a href="{{ $h['cta']['url'] }}" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8 animate-scale-in">
+                    <a href="{{ $h['cta']['url'] }}"
+                       class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-11 rounded-md px-8 animate-scale-in">
                         {{ $h['cta']['label'] }}
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path d="M13.5 4.5L21 12l-7.5 7.5M21 12H3"/>
                         </svg>
                     </a>
 
-                    <a href="{{ $h['cta2']['url'] }}" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 rounded-md px-8 animate-scale-in">
+                    <a href="{{ $h['cta2']['url'] }}"
+                       class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 rounded-md px-8 animate-scale-in">
                         {{ $h['cta2']['label'] }}
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path d="M13.5 4.5L21 12l-7.5 7.5M21 12H3"/>
@@ -80,9 +83,12 @@
 
                 <a href="{{ $articles['index_url'] }}" class="mt-6 md:mt-0 inline-flex">
                     <span class="sr-only">Voir tous les articles</span>
-                    <button class="border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded inline-flex items-center gap-2">
+                    <button
+                        class="border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded inline-flex items-center gap-2">
                         Voir tous les articles
-                        <svg class="ml-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 4.5 21 12l-7.5 7.5M21 12H3"/></svg>
+                        <svg class="ml-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M13.5 4.5 21 12l-7.5 7.5M21 12H3"/>
+                        </svg>
                     </button>
                 </a>
             </div>
@@ -139,28 +145,39 @@
 
                         <div class="animate-stagger {{ $isFeatured ? 'md:col-span-2 lg:col-span-3' : '' }}">
                             <article class="group card-hover">
-                                <a href="{{ $url }}" class="block bg-bg-elevated border border-border-subtle rounded-xl overflow-hidden h-full">
-                                    <figure class="relative overflow-hidden {{ $isFeatured ? 'h-64 md:h-80' : 'h-48' }}">
+                                <a href="{{ $url }}"
+                                   class="block bg-bg-elevated border border-border-subtle rounded-xl overflow-hidden h-full">
+                                    <figure
+                                        class="relative overflow-hidden {{ $isFeatured ? 'h-64 md:h-80' : 'h-48' }}">
                                         <img
                                             src="{{ $cover }}"
                                             alt="{{ $title }}"
                                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                             loading="lazy" decoding="async" width="1200" height="800">
-                                        <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                        <div
+                                            class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                     </figure>
 
                                     <div class="p-6">
                                         <div class="flex items-center gap-4 text-xs text-text-muted mb-3">
                                             @if($date)
                                                 <div class="flex items-center gap-1">
-                                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 2h2v2h6V2h2v2h3v18H4V4h3V2Zm13 8H6v10h14V10Z"/></svg>
-                                                    <time datetime="{{ $date->toDateString() }}">{{ $date->locale('fr_FR')->translatedFormat('d/m/Y') }}</time>
+                                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"
+                                                         aria-hidden="true">
+                                                        <path d="M7 2h2v2h6V2h2v2h3v18H4V4h3V2Zm13 8H6v10h14V10Z"/>
+                                                    </svg>
+                                                    <time
+                                                        datetime="{{ $date->toDateString() }}">{{ $date->locale('fr_FR')->translatedFormat('d/m/Y') }}</time>
                                                 </div>
                                             @endif
 
                                             @if($readTime)
                                                 <div class="flex items-center gap-1">
-                                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.75a10.25 10.25 0 1 0 0 20.5 10.25 10.25 0 0 0 0-20.5ZM12.75 6v6l4 2"/></svg>
+                                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"
+                                                         aria-hidden="true">
+                                                        <path
+                                                            d="M12 1.75a10.25 10.25 0 1 0 0 20.5 10.25 10.25 0 0 0 0-20.5ZM12.75 6v6l4 2"/>
+                                                    </svg>
                                                     <span>{{ $readTime }} min</span>
                                                 </div>
                                             @endif
@@ -178,12 +195,14 @@
                                             <div class="flex flex-wrap gap-2 mb-4">
                                                 @php $maxTags = $isFeatured ? 3 : 3; @endphp
                                                 @foreach(array_slice($tags, 0, $maxTags) as $tg)
-                                                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-surface text-primary font-medium">
+                                                    <span
+                                                        class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-surface text-primary font-medium">
                                                     {{ $tg }}
                                                 </span>
                                                 @endforeach
                                                 @if(count($tags) > $maxTags)
-                                                    <span class="text-xs text-text-muted">+{{ count($tags) - $maxTags }}</span>
+                                                    <span
+                                                        class="text-xs text-text-muted">+{{ count($tags) - $maxTags }}</span>
                                                 @endif
                                             </div>
                                         @endif
@@ -191,18 +210,24 @@
                                         <div class="flex items-center justify-between">
                                             @if($authorName)
                                                 <div class="flex items-center gap-2">
-                                                <span class="relative flex h-6 w-6 shrink-0 overflow-hidden rounded-full bg-muted">
-                                                    <img src="{{ $authorAvatar ?? 'https://placehold.co/32x32' }}" alt="{{ $authorName }}" class="h-full w-full object-cover" loading="lazy" decoding="async" width="32" height="32">
+                                                <span
+                                                    class="relative flex h-6 w-6 shrink-0 overflow-hidden rounded-full bg-muted">
+                                                    <img src="{{ $authorAvatar ?? 'https://placehold.co/32x32' }}"
+                                                         alt="{{ $authorName }}" class="h-full w-full object-cover"
+                                                         loading="lazy" decoding="async" width="32" height="32">
                                                 </span>
-                                                    <span class="text-xs text-text-muted font-medium">{{ $authorName }}</span>
+                                                    <span
+                                                        class="text-xs text-text-muted font-medium">{{ $authorName }}</span>
                                                 </div>
                                             @else
                                                 <span aria-hidden="true"></span>
                                             @endif
 
-                                            <span class="flex items-center gap-1 text-xs text-primary font-medium group-hover:gap-2 transition-all duration-200">
+                                            <span
+                                                class="flex items-center gap-1 text-xs text-primary font-medium group-hover:gap-2 transition-all duration-200">
                                             Lire
-                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 4.5 21 12l-7.5 7.5M21 12H3"/></svg>
+                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"
+                                                 aria-hidden="true"><path d="M13.5 4.5 21 12l-7.5 7.5M21 12H3"/></svg>
                                         </span>
                                         </div>
                                     </div>
@@ -241,7 +266,8 @@
         <div class="container-custom">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div>
-                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-surface text-primary font-medium hover:bg-primary/10 mb-4">À propos</span>
+                    <span
+                        class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-surface text-primary font-medium hover:bg-primary/10 mb-4">À propos</span>
                     <h2 class="text-fluid-3xl font-display font-bold text-text mb-6">
                         {{ $about['title'] }}
                     </h2>
@@ -251,16 +277,23 @@
                     <p class="text-text-muted mb-8 text-fluid-base leading-relaxed">
                         {{ $about['p2'] }}
                     </p>
-                    <a href="{{ $about['btn']['url'] }}" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                    <a href="{{ $about['btn']['url'] }}"
+                       class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
                         {{ $about['btn']['label'] }}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                             class="ml-2 h-4 w-4">
+                            <path d="M5 12h14"/>
+                            <path d="m12 5 7 7-7 7"/>
+                        </svg>
                     </a>
                 </div>
 
                 <div class="relative">
                     <div class="bg-gradient-primary rounded-2xl shadow-2xl overflow-hidden">
                         <div class="bg-bg-elevated px-4 py-3 flex items-center space-x-2">
-                            <img src="{{ $about['image'] }}" class="p-6 w-full rounded-lg" alt="À propos" loading="lazy" decoding="async" />
+                            <img src="{{ $about['image'] }}" class="p-6 w-full rounded-lg" alt="À propos" loading="lazy"
+                                 decoding="async"/>
                         </div>
                     </div>
                     <div class="absolute -top-4 -right-4 w-24 h-24 bg-primary/10 rounded-full blur-xl"></div>

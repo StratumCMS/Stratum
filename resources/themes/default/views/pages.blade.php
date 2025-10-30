@@ -1,4 +1,4 @@
-@extends('theme::layout.app')
+@extends('theme::layouts.app')
 
 @section('title', $page->title)
 @section('description', $page->meta_description)

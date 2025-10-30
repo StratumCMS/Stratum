@@ -1,4 +1,4 @@
-@extends('theme::layout.app')
+@extends('theme::layouts.app')
 
 @section('title', 'Articles')
 
@@ -29,7 +29,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
                     @foreach ($paginatedPosts as $post)
                         <div class="block-bg rounded-xl overflow-hidden news-card transition-all duration-300">
-                            <div class="h-48 bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
+                            <div
+                                class="h-48 bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
                                 <img src="{{ $post->thumbnail() ?? 'https://placehold.co/600x400?text=Sans+image' }}"
                                      alt="{{ $post->title }}" class="w-full h-48 object-cover">
                             </div>

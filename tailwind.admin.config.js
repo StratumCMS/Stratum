@@ -4,6 +4,7 @@ module.exports = {
     darkMode: 'class',
     content: [
         './resources/views/admin/**/*.blade.php',
+        './modules/**/resources/views/admin/*.blade.php',
         './resources/views/components/**/*.blade.php',
         './resources/js/**/*.js',
     ],

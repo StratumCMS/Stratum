@@ -4,6 +4,7 @@ module.exports = {
     content: [
         './resources/views/elements/**/*.blade.php',
         './resources/views/profile/**/*.blade.php',
+        './modules/**/resources/views/*.blade.php',
         './resources/views/posts/**/*.blade.php',
         './resources/views/layouts/**/*.blade.php',
         './resources/views/errors/**/*.blade.php',
