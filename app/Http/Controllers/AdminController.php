@@ -30,12 +30,19 @@ class AdminController extends Controller
         $moduleCount = Module::where('active', true)->count();
         $articlesPublished = Article::where('is_published', true)->count();
 
-        $visitors30d = Visit::where('visited_at', '>=', now()->subDays(30))->count();
-        $visitorsPrev30d = Visit::whereBetween('visited_at', [now()->subDays(60), now()->subDays(31)])->count();
+        $visitors30d = Visit::where('visited_at', '>=', now()->subDays(30))
+            ->distinct('ip')
+            ->count('ip');
+
+        $visitorsPrev30d = Visit::whereBetween('visited_at', [now()->subDays(60), now()->subDays(31)])
+            ->distinct('ip')
+            ->count('ip');
 
         $visitorChange = 0;
         if ($visitorsPrev30d > 0) {
             $visitorChange = round((($visitors30d - $visitorsPrev30d) / $visitorsPrev30d) * 100, 1);
+        } elseif ($visitors30d > 0) {
+            $visitorChange = 100;
         }
 
         $pageViews = Page::sum('views');
@@ -46,7 +53,35 @@ class AdminController extends Controller
 
         $pageViewsChange = $previousViews > 0 ? round((($currentViews - $previousViews) / $previousViews) * 100, 1) : 0;
 
-        $articlesChange = -2.1;
+        $articlesThisMonth = Article::where('is_published', true)
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->count();
+
+        $articlesLastMonth = Article::where('is_published', true)
+            ->whereBetween('created_at', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()])
+            ->count();
+
+        $articlesChange = 0;
+        if ($articlesLastMonth > 0) {
+            $articlesChange = round((($articlesThisMonth - $articlesLastMonth) / $articlesLastMonth) * 100, 1);
+        } elseif ($articlesThisMonth > 0) {
+            $articlesChange = 100;
+        }
+
+        $modulesThisMonth = Module::where('active', true)
+            ->where('updated_at', '>=', now()->startOfMonth())
+            ->count();
+
+        $modulesLastMonth = Module::where('active', true)
+            ->whereBetween('updated_at', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()])
+            ->count();
+
+        $moduleChange = 0;
+        if ($modulesLastMonth > 0) {
+            $moduleChange = round((($modulesThisMonth - $modulesLastMonth) / $modulesLastMonth) * 100, 1);
+        } elseif ($modulesThisMonth > 0) {
+            $moduleChange = 100;
+        }
 
         $stats = [
             [
@@ -60,7 +95,7 @@ class AdminController extends Controller
                 'title' => 'Pages vues',
                 'value' => $pageViews,
                 'change' => $pageViewsChange,
-                'icon' => 'fa-calendar',
+                'icon' => 'fa-eye',
                 'color' => 'bg-success',
             ],
             [
@@ -73,7 +108,7 @@ class AdminController extends Controller
             [
                 'title' => 'Modules actifs',
                 'value' => $moduleCount,
-                'change' => 5.0,
+                'change' => $moduleChange,
                 'icon' => 'fa-star',
                 'color' => 'bg-purple-500',
             ],
@@ -96,21 +131,35 @@ class AdminController extends Controller
         $startDate = now()->subDays($days - 1)->startOfDay();
 
         $visits = Visit::where('visited_at', '>=', $startDate)
-            ->get()
-            ->groupBy(fn ($visit) => $visit->visited_at->format('Y-m-d'))
-            ->map(fn ($group) => $group->count());
+            ->selectRaw('DATE(visited_at) as date, COUNT(DISTINCT ip) as count')
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->pluck('count', 'date');
 
+        $labels = [];
         $data = [];
+
         for ($i = 0; $i < $days; $i++) {
-            $date = now()->subDays($days - 1 - $i)->format('Y-m-d');
-            $label = Carbon::parse($date)->translatedFormat('D');
-            $data[] = [
-                'label' => $label,
-                'count' => $visits->get($date, 0)
-            ];
+            $date = now()->subDays($days - 1 - $i);
+            $dateStr = $date->format('Y-m-d');
+
+            if ($days <= 7) {
+                $labels[] = $date->translatedFormat('D d/m');
+            } elseif ($days <= 31) {
+                $labels[] = $date->translatedFormat('d M');
+            } else {
+                $labels[] = $date->translatedFormat('d/m');
+            }
+
+            $data[] = (int) $visits->get($dateStr, 0);
         }
 
-        return response()->json($data);
+        return response()->json([
+            'labels' => $labels,
+            'data' => $data,
+            'total' => array_sum($data),
+            'average' => $days > 0 ? round(array_sum($data) / $days, 1) : 0
+        ]);
     }
 
     public function themePage()
