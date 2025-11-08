@@ -60,6 +60,7 @@ class ModuleController extends Controller
         }
 
         $directories = File::directories($modulesDir);
+        $scannedSlugs = [];
         $scannedCount = 0;
         $addedCount = 0;
 
@@ -77,6 +78,8 @@ class ModuleController extends Controller
             }
 
             $slug = basename($directory);
+            $scannedSlugs[] = $slug;
+
             $author = is_array($manifest['authors'])
                 ? implode(', ', $manifest['authors'])
                 : ($manifest['authors'] ?? 'Inconnu');
@@ -100,16 +103,27 @@ class ModuleController extends Controller
             $scannedCount++;
         }
 
+        $deletedCount = Module::whereNotIn('slug', $scannedSlugs)->count();
+        if ($deletedCount > 0) {
+            Module::whereNotIn('slug', $scannedSlugs)->delete();
+        }
+
         if (request()->isMethod('post')) {
-            if ($addedCount > 0) {
-                return back()->with('success', "✅ {$addedCount} nouveau(x) module(s) détecté(s) et ajouté(s) (désactivés par défaut).");
+            if ($addedCount > 0 || $deletedCount > 0) {
+                $message = "✅ ";
+                if ($addedCount > 0) {
+                    $message .= "{$addedCount} nouveau(x) module(s) ajouté(s). ";
+                }
+                if ($deletedCount > 0) {
+                    $message .= "{$deletedCount} module(s) supprimé(s) de la liste.";
+                }
+                return back()->with('success', $message);
             } elseif ($scannedCount > 0) {
-                return back()->with('success', "✅ {$scannedCount} module(s) scanné(s), aucun nouveau module détecté.");
+                return back()->with('success', "✅ {$scannedCount} module(s) scanné(s), aucun changement détecté.");
             } else {
                 return back()->with('error', 'Aucun module valide trouvé dans le dossier modules/.');
             }
         }
-
     }
 
     public function install(Request $request, $id)
