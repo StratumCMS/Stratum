@@ -40,6 +40,30 @@ class MediaController extends Controller
         return back()->with('success', 'Fichier uploadé avec succès.');
     }
 
+    public function syncStorageLink()
+    {
+        try {
+            $publicStoragePath = public_path('storage');
+
+            if (file_exists($publicStoragePath)) {
+                if (is_link($publicStoragePath)) {
+                    unlink($publicStoragePath);
+                } else {
+                    return back()->with('error', 'Un dossier/fichier "storage" existe déjà dans public/. Supprimez-le manuellement.');
+                }
+            }
+
+            \Artisan::call('storage:link');
+
+            log_activity('media', 'System', 'Lien symbolique storage resynchronisé');
+
+            return back()->with('success', 'Lien symbolique storage resynchronisé avec succès.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Erreur lors de la resynchronisation : ' . $e->getMessage());
+        }
+    }
+
     public function delete(MediaItem $mediaItem)
     {
         log_activity('media', 'Upload', "Fichier « {$mediaItem->name} » supprimé");

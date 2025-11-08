@@ -7,21 +7,20 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Module;
+use Illuminate\Support\Facades\Cache;
 
 class ModuleServiceProvider extends ServiceProvider
 {
+    protected array $loadedProviders = [];
+    protected bool $navigationRegistered = false;
+
     public function register(): void
     {
     }
 
     public function boot(): void
     {
-
-        if (!file_exists(storage_path('installed'))) {
-            return;
-        }
-
-        if (!Schema::hasTable('modules')) {
+        if (!file_exists(storage_path('installed')) || !Schema::hasTable('modules')) {
             return;
         }
 
@@ -29,36 +28,106 @@ class ModuleServiceProvider extends ServiceProvider
 
         foreach ($modules as $module) {
             try {
-                $modulePath = base_path('modules/' . $module->slug);
-
-                if (File::isDirectory($modulePath . '/resources/views')) {
-                    $this->loadViewsFrom($modulePath . '/resources/views', $module->slug);
-                }
-
-                if (File::isDirectory($modulePath . '/resources/lang')) {
-                    $this->loadTranslationsFrom($modulePath . '/resources/lang', $module->slug);
-                }
-
-                if (File::isDirectory($modulePath . '/database/migrations')) {
-                    $this->loadMigrationsFrom($modulePath . '/database/migrations');
-                }
-
-                if (File::exists($modulePath . '/config/module.php')) {
-                    $this->mergeConfigFrom($modulePath . '/config/module.php', $module->slug);
-                }
-
-                if (File::exists($modulePath . '/src/Helpers/helper.php')) {
-                    require_once $modulePath . '/src/Helpers/helper.php';
-                }
-
-                $this->registerMiddlewares($modulePath);
-
-                $this->registerCommands($modulePath);
-
-                $this->registerModuleProviders($modulePath);
-
+                $this->loadModule($module);
             } catch (\Throwable $e) {
                 Log::error("Erreur lors du chargement du module [{$module->slug}] : {$e->getMessage()}");
+            }
+        }
+
+        $this->registerModuleNavigation();
+    }
+
+    protected function loadModule(Module $module): void
+    {
+        $modulePath = base_path('modules/' . $module->slug);
+
+        $this->loadModuleResources($modulePath, $module->slug);
+
+        $this->loadModuleProviders($modulePath, $module->slug);
+    }
+
+    protected function loadModuleResources(string $modulePath, string $slug): void
+    {
+        if (File::isDirectory($modulePath . '/resources/views')) {
+            $this->loadViewsFrom($modulePath . '/resources/views', $slug);
+        }
+
+        if (File::isDirectory($modulePath . '/resources/lang')) {
+            $this->loadTranslationsFrom($modulePath . '/resources/lang', $slug);
+        }
+
+        if (File::isDirectory($modulePath . '/database/migrations')) {
+            $this->loadMigrationsFrom($modulePath . '/database/migrations');
+        }
+
+        if (File::exists($modulePath . '/config/module.php')) {
+            $this->mergeConfigFrom($modulePath . '/config/module.php', $slug);
+        }
+
+        if (File::exists($modulePath . '/src/Helpers/helper.php')) {
+            require_once $modulePath . '/src/Helpers/helper.php';
+        }
+
+        $this->registerMiddlewares($modulePath);
+        $this->registerCommands($modulePath);
+    }
+
+    protected function loadModuleProviders(string $modulePath, string $slug): void
+    {
+        $providerPath = $modulePath . '/src/Providers';
+        if (!File::isDirectory($providerPath)) {
+            return;
+        }
+
+        foreach (File::allFiles($providerPath) as $file) {
+            $class = $this->getClassFromFile($file, $modulePath);
+
+            if (in_array($class, $this->loadedProviders)) {
+                continue;
+            }
+
+            if (class_exists($class) && is_subclass_of($class, \Illuminate\Support\ServiceProvider::class)) {
+                $this->loadedProviders[] = $class;
+
+                $this->app->register($class);
+            }
+        }
+    }
+
+    protected function registerModuleNavigation(): void
+    {
+        if ($this->navigationRegistered) {
+            return;
+        }
+
+        $this->navigationRegistered = true;
+
+        $cacheKey = 'module_navigation_' . md5(serialize($this->loadedProviders));
+
+        $navigationManager = $this->app->make(\App\Support\ModuleNavigationManager::class);
+
+        $navigationManager->clear();
+
+        foreach ($this->loadedProviders as $providerClass) {
+            $this->handleSingleProviderNavigation($providerClass, $navigationManager);
+        }
+    }
+
+    protected function handleSingleProviderNavigation(string $providerClass, $navigationManager): void
+    {
+        $instance = $this->app->getProvider($providerClass);
+
+        if (method_exists($instance, 'adminNavigation')) {
+            try {
+                $links = $instance->adminNavigation();
+
+                if (config('app.debug')) {
+                    \Log::debug("Navigation chargée depuis {$providerClass}", ['links' => array_keys($links)]);
+                }
+
+                $navigationManager->add($links);
+            } catch (\Throwable $e) {
+                \Log::error("Échec du chargement de la navigation depuis {$providerClass}: {$e->getMessage()}");
             }
         }
     }
@@ -89,48 +158,12 @@ class ModuleServiceProvider extends ServiceProvider
         }
     }
 
-    protected function registerModuleProviders(string $modulePath): void
-    {
-        $providerPath = $modulePath . '/src/Providers';
-        if (!\File::isDirectory($providerPath)) {
-            return;
-        }
-
-        foreach (\File::allFiles($providerPath) as $file) {
-            $class = $this->getClassFromFile($file, $modulePath);
-
-            if (class_exists($class) && is_subclass_of($class, \Illuminate\Support\ServiceProvider::class)) {
-                // Enregistrer le provider via le container (instanciation correcte)
-                $this->app->register($class);
-
-                // Utiliser l'instance enregistrée (et non app->make())
-                $instance = $this->app->getProvider($class);
-
-                if (method_exists($instance, 'adminNavigation')) {
-                    try {
-                        $links = $instance->adminNavigation();
-
-                        \Log::info("✅ Module links from {$class}:", $links);
-
-                        $this->app->make(\App\Support\ModuleNavigationManager::class)->add($links);
-                    } catch (\Throwable $e) {
-                        \Log::error("❌ Failed to get navigation from {$class}: {$e->getMessage()}");
-                    }
-                }
-            }
-        }
-    }
-
-
-
-
     protected function getClassFromFile($file, $modulePath): string
     {
         $relative = str_replace($modulePath . '/', '', $file->getPathname());
         $relative = str_replace(['/', '\\'], '\\', $relative);
         $relative = str_replace('.php', '', $relative);
 
-        // On retire le "src\" s'il existe
         if (str_starts_with($relative, 'src\\')) {
             $relative = substr($relative, 4);
         }
@@ -139,8 +172,4 @@ class ModuleServiceProvider extends ServiceProvider
 
         return "Modules\\{$slug}\\{$relative}";
     }
-
-
-
-
 }

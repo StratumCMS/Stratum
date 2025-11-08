@@ -80,7 +80,7 @@ class UserController extends Controller
 
         $user->syncRoles([$request->role]);
 
-        return redirect()->route('users.index')->with('success', 'Utilisateur mis à jour avec succès.');
+        return redirect()->route('admin.users')->with('success', 'Utilisateur mis à jour avec succès.');
     }
 
     /**

@@ -100,23 +100,21 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('vendor/tinymce/tinymce.min.js') }}"></script>
     <script>
-        tinymce.init({
-            selector: 'textarea#tinymce',
-            height: 400,
-            menubar: false,
-            plugins: 'link lists code fullscreen table',
-            toolbar: 'undo redo | formatselect | bold italic underline | bullist numlist | link table | code fullscreen',
-            branding: false,
-
-            base_url: '/vendor/tinymce',
-            suffix: '.min',
-
-            skin: 'oxide-dark',
-            content_css: 'dark',
-
-            license_key: 'no-license'
+        document.addEventListener('DOMContentLoaded', function () {
+            window.tinyLoadAndInit({
+                selector: 'textarea#tinymce',
+                height: 400,
+                menubar: false,
+                plugins: 'link lists code fullscreen table',
+                toolbar: 'undo redo | formatselect | bold italic underline | bullist numlist | link table | code fullscreen',
+                branding: false,
+                skin: 'oxide-dark',
+                content_css: 'dark',
+                base_url: '/vendor/tinymce',
+                suffix: '.min',
+                license_key: 'gpl'
+            }).catch(e => console.error(e));
         });
 
         function generateSlug(title) {

@@ -7,6 +7,7 @@ use App\Models\NavbarElement;
 use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 class NavbarElementController extends Controller
 {
