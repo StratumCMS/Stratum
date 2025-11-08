@@ -16,6 +16,7 @@ class ModuleController extends Controller
     public function index()
     {
         $this->scanAndAddModules();
+
         $modules = Module::all();
 
         $licenseKey = setting('site_key');
@@ -48,10 +49,19 @@ class ModuleController extends Controller
         return view('admin.modules', compact('modules', 'marketModules', 'licensedIds', 'installedSlugs'));
     }
 
-    public function scanAndAddModules()
-    {
+    public function scanAndAddModules(){
         $modulesDir = base_path('modules');
+
+        if (!File::isDirectory($modulesDir)) {
+            if (request()->isMethod('post')) {
+                return back()->with('error', 'Le dossier modules/ n\'existe pas.');
+            }
+            return;
+        }
+
         $directories = File::directories($modulesDir);
+        $scannedCount = 0;
+        $addedCount = 0;
 
         foreach ($directories as $directory) {
             $manifestPath = $directory . '/plugin.json';
@@ -67,9 +77,11 @@ class ModuleController extends Controller
             }
 
             $slug = basename($directory);
-            $author = is_array($manifest['authors']) ? implode(', ', $manifest['authors']) : ($manifest['authors'] ?? 'Inconnu');
+            $author = is_array($manifest['authors'])
+                ? implode(', ', $manifest['authors'])
+                : ($manifest['authors'] ?? 'Inconnu');
 
-            Module::updateOrCreate(
+            $module = Module::updateOrCreate(
                 ['slug' => $slug],
                 [
                     'name' => $manifest['name'],
@@ -79,7 +91,25 @@ class ModuleController extends Controller
                     'path' => 'modules/' . $slug,
                 ]
             );
+
+            if ($module->wasRecentlyCreated) {
+                $module->update(['active' => false]);
+                $addedCount++;
+            }
+
+            $scannedCount++;
         }
+
+        if (request()->isMethod('post')) {
+            if ($addedCount > 0) {
+                return back()->with('success', "✅ {$addedCount} nouveau(x) module(s) détecté(s) et ajouté(s) (désactivés par défaut).");
+            } elseif ($scannedCount > 0) {
+                return back()->with('success', "✅ {$scannedCount} module(s) scanné(s), aucun nouveau module détecté.");
+            } else {
+                return back()->with('error', 'Aucun module valide trouvé dans le dossier modules/.');
+            }
+        }
+
     }
 
     public function install(Request $request, $id)
@@ -147,6 +177,7 @@ class ModuleController extends Controller
                 'author' => $author,
                 'description' => $manifest['description'] ?? '',
                 'path' => 'modules/' . $slug,
+                'active' => false,
             ]
         );
 
@@ -156,9 +187,13 @@ class ModuleController extends Controller
     public function activate($slug)
     {
         $module = Module::where('slug', $slug)->firstOrFail();
+
+        if ($module->active) {
+            return back()->with('error', 'Ce module est déjà activé.');
+        }
+
         $licenseKey = setting('site_key');
 
-        // Vérifie si ce module est payant et doit être sous licence
         $marketResponse = Http::get('https://stratumcms.com/api/v1/products');
         $marketModules = $marketResponse->successful()
             ? collect($marketResponse->json())->filter(fn($item) => $item['type'] === 'module')->keyBy('slug')
@@ -179,10 +214,8 @@ class ModuleController extends Controller
             }
         }
 
-        // 1. Active le module en base
         $module->update(['active' => true]);
 
-        // 2. Charge dynamiquement ses providers, routes, vues, etc.
         $modulePath = base_path("modules/{$slug}");
         $manifestPath = "{$modulePath}/plugin.json";
 
@@ -192,12 +225,10 @@ class ModuleController extends Controller
 
         $manifest = json_decode(File::get($manifestPath), true);
 
-        // Enregistre les providers
         foreach ($manifest['providers'] ?? [] as $providerClass) {
             if (class_exists($providerClass)) {
                 $instance = app()->register($providerClass);
 
-                // Appel de adminNavigation() s'il existe
                 if (method_exists($instance, 'adminNavigation')) {
                     $existing = config('modules.sidebar_links', []);
                     $newLinks = $instance->adminNavigation();
@@ -206,22 +237,18 @@ class ModuleController extends Controller
             }
         }
 
-        // Charge routes web
         if (File::exists($modulePath . '/routes/web.php')) {
             require_once $modulePath . '/routes/web.php';
         }
 
-        // Charge vues
         if (File::isDirectory($modulePath . '/resources/views')) {
             view()->addNamespace($slug, $modulePath . '/resources/views');
         }
 
-        // Charge traductions
         if (File::isDirectory($modulePath . '/resources/lang')) {
             app('translator')->addNamespace($slug, $modulePath . '/resources/lang');
         }
 
-        // Charge helpers
         if (File::exists($modulePath . '/src/Helpers/helper.php')) {
             require_once $modulePath . '/src/Helpers/helper.php';
         }
@@ -250,6 +277,11 @@ class ModuleController extends Controller
     public function deactivate($slug)
     {
         $module = Module::where('slug', $slug)->firstOrFail();
+
+        if (!$module->active) {
+            return back()->with('error', 'Ce module est déjà désactivé.');
+        }
+
         $module->update(['active' => false]);
 
         $modulePath = base_path("modules/{$slug}");
@@ -261,7 +293,6 @@ class ModuleController extends Controller
             foreach (File::allFiles($migrationPath) as $file) {
                 $content = File::get($file);
 
-                // Recherche toutes les tables créées via Schema::create
                 preg_match_all("/Schema::create\(['\"](.*?)['\"]/", $content, $matches);
 
                 foreach ($matches[1] as $table) {
@@ -337,7 +368,6 @@ class ModuleController extends Controller
             return back()->with('error', 'Aucune version plus récente trouvée.');
         }
 
-        // Backup & remplacement
         $modulePath = base_path("modules/{$slug}");
         File::deleteDirectory($modulePath);
         File::moveDirectory($tempDir, $modulePath);
