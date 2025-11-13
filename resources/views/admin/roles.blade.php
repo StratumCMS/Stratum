@@ -112,7 +112,3 @@
         <x-role-modal :role="null" :isEdit="false" x-model="showCreateModal" />
     </div>
 @endsection
-
-@push('scripts')
-    <script src="https://unpkg.com/alpinejs" defer></script>
-@endpush
