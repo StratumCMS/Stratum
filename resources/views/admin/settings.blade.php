@@ -109,13 +109,14 @@
                                       description="Contrôle de l'indexation par les moteurs de recherche"
                                       :checked="setting('robots_txt')" />
                 </div>
+
                 <div x-show="tab === 'security'" x-cloak
                      class="flex flex-col p-6 rounded-lg border bg-card text-card-foreground shadow-sm space-y-5 hover-glow-purple"
                      x-data="{
-        whitelistEnabled: {{ setting('ip_whitelist') ? 'true' : 'false' }},
-        newIp: '',
-        ips: {{ json_encode(setting('ip_whitelist_list', [])) }}
-     }">
+                        whitelistEnabled: {{ setting('ip_whitelist') ? 'true' : 'false' }},
+                        newIp: '',
+                        ips: @js(is_array(setting('ip_whitelist_list')) ? setting('ip_whitelist_list') : (setting('ip_whitelist_list') ? json_decode(setting('ip_whitelist_list'), true) : []))
+                     }">
                     <x-setting.title icon="fas fa-shield-alt" label="Sécurité" />
 
                     <x-setting.toggle name="two_factor_auth" label="2FA"
@@ -133,46 +134,68 @@
                     </div>
 
                     <div x-show="whitelistEnabled" x-cloak class="mt-4 space-y-4 border-t pt-4">
-                        <x-setting.label text="Adresse IP à ajouter" />
+                        <x-setting.label text="Gestion des adresses IP autorisées" />
 
                         <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-end">
-                            <x-setting.input
-                                label="Nouvelle IP"
-                                name="Nouvelle IP"
-                                placeholder="192.168.1.1"
-                                x-model="newIp"
-                            />
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-muted-foreground">Nouvelle IP</label>
+                                <input
+                                    type="text"
+                                    class="w-full px-4 py-2 rounded border border-border bg-transparent text-gray-900 dark:text-white focus:ring-primary focus:outline-none"
+                                    placeholder="192.168.1.1"
+                                    x-model="newIp"
+                                    @keydown.enter.prevent="
+                                        let ip = newIp.trim();
+                                        if (ip && !ips.includes(ip)) {
+                                            ips.push(ip);
+                                            newIp = '';
+                                        }
+                                    "
+                                />
+                            </div>
 
                             <button
                                 type="button"
-                                class="bg-primary text-white px-4 py-2 rounded-md text-sm hover:bg-primary/90 transition shadow"
+                                class="bg-primary text-white px-4 py-2 rounded-md text-sm hover:bg-primary/90 transition shadow whitespace-nowrap h-fit"
                                 @click="
-                    let ip = newIp.trim();
-                    if (ip && !ips.includes(ip)) {
-                        ips.push(ip);
-                        newIp = '';
-                    }
-                "
+                                    let ip = newIp.trim();
+                                    if (ip && !ips.includes(ip)) {
+                                        ips.push(ip);
+                                        newIp = '';
+                                    }
+                                "
                             >
                                 <i class="fas fa-plus mr-1"></i> Ajouter
                             </button>
                         </div>
 
-                        <template x-if="ips.length">
-                            <ul class="space-y-2 mt-2">
-                                <template x-for="(ip, index) in ips" :key="index">
-                                    <li class="flex items-center justify-between bg-muted px-3 py-2 rounded shadow-sm">
-                                        <span x-text="ip" class="font-mono text-sm text-muted-foreground"></span>
-                                        <button
-                                            type="button"
-                                            class="text-red-600 hover:text-red-800"
-                                            @click="ips.splice(index, 1)"
-                                        >
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </li>
-                                </template>
-                            </ul>
+                        <template x-if="ips.length > 0">
+                            <div class="space-y-2 mt-4">
+                                <p class="text-sm font-medium text-muted-foreground">
+                                    IPs autorisées (<span x-text="ips.length"></span>)
+                                </p>
+                                <ul class="space-y-2">
+                                    <template x-for="(ip, index) in ips" :key="index">
+                                        <li class="flex items-center justify-between bg-muted px-3 py-2 rounded shadow-sm">
+                                            <span x-text="ip" class="font-mono text-sm"></span>
+                                            <button
+                                                type="button"
+                                                class="text-red-600 hover:text-red-800 transition"
+                                                @click.prevent="ips.splice(index, 1)"
+                                                title="Supprimer cette IP"
+                                            >
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </template>
+
+                        <template x-if="ips.length === 0">
+                            <p class="text-sm text-muted-foreground italic mt-2">
+                                Aucune IP autorisée. Ajoutez-en une ci-dessus.
+                            </p>
                         </template>
 
                         <input type="hidden" name="ip_whitelist_list" :value="JSON.stringify(ips)">
@@ -226,13 +249,8 @@
                                 <x-setting.input name="mail.from_address" label="Email expéditeur" :value="setting('mail_from_address')" />
                                 <x-setting.input name="mail.from_name" label="Nom expéditeur" :value="setting('mail_from_name')" />
                             </div>
-
                         </div>
                     </div>
-
-
-
-
                 </div>
 
                 <div x-show="tab === 'notifications'" x-cloak class="flex flex-col p-6 rounded-lg border bg-card text-card-foreground shadow-sm space-y-5 hover-glow-purple">
@@ -255,7 +273,6 @@
                         <option value="monthly">Chaque mois</option>
                         <option value="yearly">Chaque année</option>
                     </x-setting.select>
-
                 </div>
 
                 <div x-show="tab === 'performance'" x-cloak class="flex flex-col p-6 rounded-lg border bg-card text-card-foreground shadow-sm space-y-5 hover-glow-purple">
@@ -276,27 +293,26 @@
             </div>
         </form>
 
-            <div x-show="modalOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50">
-                <div class="bg-card rounded-lg max-w-3xl w-full p-6 space-y-4" @click.away="closeModal()">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-lg font-semibold">Bibliothèque de médias</h2>
-                        <button @click="closeModal()" class="text-muted-foreground"><i class="fas fa-times"></i></button>
-                    </div>
+        <div x-show="modalOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50">
+            <div class="bg-card rounded-lg max-w-3xl w-full p-6 space-y-4" @click.away="closeModal()">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-semibold">Bibliothèque de médias</h2>
+                    <button @click="closeModal()" class="text-muted-foreground"><i class="fas fa-times"></i></button>
+                </div>
 
-                    <div class="grid grid-cols-4 gap-4 overflow-y-auto max-h-80">
-                        <template x-for="media in mediaItems" :key="media.id">
-                            <div @click="selectMedia(media)" class="cursor-pointer border hover:bg-muted/10 p-1 rounded">
-                                <img :src="media.url" class="w-full h-20 object-cover rounded">
-                            </div>
-                        </template>
-                    </div>
+                <div class="grid grid-cols-4 gap-4 overflow-y-auto max-h-80">
+                    <template x-for="media in mediaItems" :key="media.id">
+                        <div @click="selectMedia(media)" class="cursor-pointer border hover:bg-muted/10 p-1 rounded">
+                            <img :src="media.url" class="w-full h-20 object-cover rounded">
+                        </div>
+                    </template>
                 </div>
             </div>
+        </div>
     </div>
 @endsection
 
 @push('scripts')
-    <script src="https://unpkg.com/alpinejs" defer></script>
     <script>
         function mediaSelector() {
             return {
@@ -337,4 +353,3 @@
         }
     </script>
 @endpush
-

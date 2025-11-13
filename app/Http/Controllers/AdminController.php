@@ -239,7 +239,7 @@ class AdminController extends Controller
             'maintenance_mode', 'seo_enabled', 'xml_sitemap', 'robots_txt', 'two_factor_auth',
             'login_attempts', 'ip_whitelist', 'email_notifications', 'push_notifications',
             'admin_notifications', 'auto_backup', 'cache_enabled', 'compression_enabled',
-            'image_optimization', 'captcha.enabled', 'email_enabled'
+            'image_optimization', 'captcha_enabled', 'email_enabled'
         ];
 
         foreach ($booleanFields as $field) {
@@ -248,14 +248,22 @@ class AdminController extends Controller
             }
         }
 
-        if ($request->has('ip_whitelist_list')) {
-            $json = $request->input('ip_whitelist_list');
-            $decoded = json_decode($json, true);
+        if (!empty($submitted['ip_whitelist']) && (int)$submitted['ip_whitelist'] === 1) {
+            if ($request->has('ip_whitelist_list')) {
+                $json = (string) $request->input('ip_whitelist_list');
+                $decoded = json_decode($json, true);
 
-            if (is_array($decoded)) {
-                $filtered = array_unique(array_filter($decoded, fn($ip) => filter_var($ip, FILTER_VALIDATE_IP)));
-                $submitted['ip_whitelist_list'] = $filtered;
+                if (is_array($decoded)) {
+                    $filtered = array_values(array_unique(array_filter($decoded, fn($ip) => filter_var($ip, FILTER_VALIDATE_IP))));
+                    $submitted['ip_whitelist_list'] = $filtered;
+                } else {
+                    $submitted['ip_whitelist_list'] = [];
+                }
+            } else {
+                $submitted['ip_whitelist_list'] = [];
             }
+        } else {
+            unset($submitted['ip_whitelist_list']);
         }
 
         $changed = [];
