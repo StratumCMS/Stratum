@@ -114,7 +114,6 @@
             </div>
         </div>
 
-        <!-- Modal for media library -->
         <div x-show="modalOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50">
             <div class="bg-card rounded-lg max-w-3xl w-full p-6 space-y-4" @click.away="closeModal()">
                 <div class="flex justify-between items-center">
@@ -135,7 +134,6 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('vendor/tinymce/tinymce.min.js') }}"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
     <script>
         function createArticle(thumbnailUrl) {
@@ -143,7 +141,7 @@
                 modalOpen: false,
                 mediaItems: @json($mediaItems),
                 selectedMediaId: null,
-                thumbnailPreviewUrl: thumbnailUrl, // Initialisez avec l'URL actuelle de la miniature
+                thumbnailPreviewUrl: thumbnailUrl,
 
                 openModal() { this.modalOpen = true },
                 closeModal() { this.modalOpen = false },
@@ -180,21 +178,20 @@
             }
         }
 
-        tinymce.init({
-            selector: '#content-editor',
-            height: 400,
-            menubar: false,
-            plugins: 'link image media lists table',
-            toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link image media table',
-            branding: false,
-
-            base_url: '/vendor/tinymce',
-            suffix: '.min',
-
-            skin: 'oxide-dark',
-            content_css: 'dark',
-
-            license_key: 'no-license'
+        document.addEventListener('DOMContentLoaded', function () {
+            window.tinyLoadAndInit({
+                selector: '#content-editor',
+                height: 400,
+                menubar: false,
+                plugins: 'link lists code fullscreen table',
+                toolbar: 'undo redo | formatselect | bold italic underline | bullist numlist | link table | code fullscreen',
+                branding: false,
+                skin: 'oxide-dark',
+                content_css: 'dark',
+                base_url: '/vendor/tinymce',
+                suffix: '.min',
+                license_key: 'gpl'
+            }).catch(e => console.error(e));
         });
     </script>
 @endpush

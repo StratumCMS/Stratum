@@ -21,7 +21,6 @@
             </template>
         </div>
 
-        {{-- Filtres + Bouton --}}
         <div class="rounded-lg border bg-card text-card-foreground shadow-sm flex flex-col md:flex-row gap-4 items-center px-6 py-4">
             <div class="flex-1">
                 <i class="fas fa-search absolute top-3 left-3 text-muted-foreground"></i>
@@ -64,8 +63,8 @@
                     <tr class="hover:bg-muted/20">
                         <td class="flex items-center gap-3">
                             <img
-                                :src=article.thumbnail
-                                alt={article.title}
+                                :src="article.thumbnail ?? 'https://placehold.co/600x400?text=Sans+image'"
+                                :alt="article.title || 'Pas de titre'"
                                 class="w-12 h-8 object-cover rounded"
                             />
                             <div>
@@ -127,11 +126,22 @@
 @endsection
 
 @push('scripts')
-    <script src="https://unpkg.com/alpinejs" defer></script>
     <script>
         function articles() {
             return {
-                articles: {!! $articles->values()->toJson() !!},
+                articles: {!! $articles->map(function($a) {
+    return [
+        'id' => $a->id,
+        'title' => $a->title,
+        'description' => $a->description,
+        'thumbnail' => $a->thumbnail,
+        'type' => $a->type,
+        'is_published' => $a->is_published,
+        'archived' => $a->archived,
+        'author' => ['name' => $a->author->name ?? null],
+        'created_at' => $a->created_at,
+    ];
+})->toJson() !!},
                 stats: {!! json_encode($stats) !!},
                 filters: { search: '', status: '', type: '' },
                 labels: {
