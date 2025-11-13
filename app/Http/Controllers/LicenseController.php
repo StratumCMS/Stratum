@@ -8,17 +8,16 @@ use Illuminate\Http\Request;
 
 class LicenseController extends Controller
 {
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $request->validate([
-            'license_key' => 'required|string|unique:licenses,license_key',
+            'license_key' => 'required|string|unique:licenses,license_key|regex:/^ST\-[A-Z0-9]{4}\-[A-Z0-9]{4}$/',
         ]);
 
-        $licenseKey = $request->license_key;
+        $licenseKey = strtoupper(trim($request->license_key));
 
-        $resources = LicenseServer::fetchPurchasedResources($licenseKey);
-
-        if (!$resources || !isset($resources['valid']) || !$resources['valid']) {
-            return back()->with('error', 'Clé de licence invalide.');
+        if (!LicenseServer::isLicenseActive($licenseKey)) {
+            return back()->with('error', 'Clé de licence invalide ou inactive.');
         }
 
         License::create(['license_key' => $licenseKey]);
@@ -26,19 +25,20 @@ class LicenseController extends Controller
         return back()->with('success', 'Licence enregistrée avec succès.');
     }
 
-    public function getPurchasedResources(){
+    public function getPurchasedResources()
+    {
         $license = License::first();
 
         if (!$license) {
             return response()->json(['error' => 'Aucune licence trouvée.'], 404);
         }
 
-        $resources = LicenseServer::fetchPurchasedResources($license->license_key);
-
-        if (!$resources || !isset($resources['valid']) || !$resources['valid']) {
-            return response()->json(['error' => 'Licence invalide.'], 403);
+        if (!LicenseServer::isLicenseActive($license->license_key)) {
+            return response()->json(['error' => 'Licence invalide ou inactive.'], 403);
         }
 
-        return response()->json($resources['resources']);
+        $data = LicenseServer::getLicensedProducts($license->license_key);
+
+        return response()->json($data['products'] ?? []);
     }
 }

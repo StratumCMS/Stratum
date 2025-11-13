@@ -235,6 +235,26 @@ class AdminController extends Controller
     {
         $submitted = $request->except('_token');
 
+        if (!empty($submitted['site_key'])) {
+            $submitted['site_key'] = strtoupper(trim($submitted['site_key']));
+
+            $request->validate([
+                'site_key' => [
+                    'required',
+                    'string',
+                    'regex:/^ST\-[A-Z0-9]{4}\-[A-Z0-9]{4}$/',
+                ],
+            ]);
+
+            if (!\App\Helpers\LicenseServer::isLicenseActive($submitted['site_key'])) {
+                logger()->info('Licence invalide détectée', ['site_key' => $submitted['site_key'], 'api_response' => \App\Helpers\LicenseServer::getLicensedProducts($submitted['site_key'])]);
+                return redirect()->route('admin.settings')
+                    ->withErrors(['site_key' => 'Clé de licence invalide ou inactive.'])
+                    ->withInput();
+            }
+
+        }
+
         $booleanFields = [
             'maintenance_mode', 'seo_enabled', 'xml_sitemap', 'robots_txt', 'two_factor_auth',
             'login_attempts', 'ip_whitelist', 'email_notifications', 'push_notifications',
@@ -288,7 +308,6 @@ class AdminController extends Controller
 
         return redirect()->route('admin.settings')->with('success', 'Paramètres mis à jour avec succès.');
     }
-
 
     public function updatePage()
     {
