@@ -19,7 +19,8 @@ class RestrictAdminAccess
             return $next($request);
         }
 
-        $whitelistedIps = explode(',', setting('whitelisted_ips', '127.0.0.1'));
+        $whitelistedIps = json_decode(setting('ip_whitelist_list', '["127.0.0.1"]'), true);
+
 
         if (!in_array($request->ip(), $whitelistedIps)) {
             abort(403, 'Accès non autorisé.');
