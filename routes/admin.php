@@ -64,7 +64,7 @@ Route::middleware(['check.installation', 'auth', 'can:access_dashboard', 'restri
     Route::delete('/pages/{page}', [PageController::class,'destroy'])->name('admin.pages.destroy');
     Route::get('/pages/create', [PageController::class, 'create'])->name('admin.pages.create');
     Route::get('/pages/{page}/edit', [PageController::class, 'edit'])->name('admin.pages.edit');
-    Route::get('/admin/modules/module-components', [PageController::class, 'getAvailableComponents'])
+    Route::get('/modules/module-components', [PageController::class, 'getAvailableComponents'])
         ->name('admin.modules.module-components');
 
 
