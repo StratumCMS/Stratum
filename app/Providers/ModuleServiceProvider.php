@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Support\ModuleComponentRenderer;
+use App\Support\ModuleNavigationManager;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
@@ -107,7 +109,7 @@ class ModuleServiceProvider extends ServiceProvider
 
         $cacheKey = 'module_navigation_' . md5(serialize($this->loadedProviders));
 
-        $navigationManager = $this->app->make(\App\Support\ModuleNavigationManager::class);
+        $navigationManager = $this->app->make(ModuleNavigationManager::class);
 
         $navigationManager->clear();
 
@@ -123,12 +125,12 @@ class ModuleServiceProvider extends ServiceProvider
 
         $this->componentsRegistered = true;
 
-        $renderer = $this->app->make(\App\Support\ModuleComponentRenderer::class);
+        $renderer = $this->app->make(ModuleComponentRenderer::class);
 
         $renderer->clear();
 
         foreach ($this->loadedProviders as $providerClass) {
-            $this->handleSingleProviderNavigation($providerClass, $renderer);
+            $this->handleSingleProviderComponents($providerClass, $renderer);
         }
     }
 
