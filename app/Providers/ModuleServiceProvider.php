@@ -14,6 +14,8 @@ class ModuleServiceProvider extends ServiceProvider
     protected array $loadedProviders = [];
     protected bool $navigationRegistered = false;
 
+    protected bool $componentsRegistered = false;
+
     public function register(): void
     {
     }
@@ -35,6 +37,7 @@ class ModuleServiceProvider extends ServiceProvider
         }
 
         $this->registerModuleNavigation();
+        $this->registerModuleComponents();
     }
 
     protected function loadModule(Module $module): void
@@ -113,6 +116,22 @@ class ModuleServiceProvider extends ServiceProvider
         }
     }
 
+    protected function registerModuleComponents(): void {
+        if ($this->componentsRegistered) {
+            return;
+        }
+
+        $this->componentsRegistered = true;
+
+        $renderer = $this->app->make(\App\Support\ModuleComponentRenderer::class);
+
+        $renderer->clear();
+
+        foreach ($this->loadedProviders as $providerClass) {
+            $this->handleSingleProviderNavigation($providerClass, $renderer);
+        }
+    }
+
     protected function handleSingleProviderNavigation(string $providerClass, $navigationManager): void
     {
         $instance = $this->app->getProvider($providerClass);
@@ -130,6 +149,24 @@ class ModuleServiceProvider extends ServiceProvider
                 \Log::error("Échec du chargement de la navigation depuis {$providerClass}: {$e->getMessage()}");
             }
         }
+    }
+
+    protected function handleSingleProviderComponents(string $providerClass, $renderer): void {
+        $instance = $this->app->getProvider($providerClass);
+
+        if (method_exists($instance, 'registerComponent')) {
+            try {
+                $instance->registerComponent($renderer);
+
+                if (config('app.debug')) {
+                    \Log::debug("Composants enregistrés depuis {$providerClass}");
+                }
+
+            }catch (\Throwable $e) {
+                \Log::error("Échec de l'enregistrement des composants depuis {$providerClass}: {$e->getMessage()}");
+            }
+        }
+
     }
 
     protected function registerMiddlewares(string $modulePath): void
