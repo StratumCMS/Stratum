@@ -16,7 +16,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\Process\Process;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -314,9 +315,12 @@ class AdminController extends Controller
         $changelogs = [];
 
         try {
-            $response = Http::get('https://api.github.com/repos/YuketsuSh/Stratum/releases');
+            $response = Http::withHeaders([
+                'Accept' => 'application/vnd.github.v3+json',
+                'User-Agent' => 'StratumCMS-Updater'
+            ])->get('https://api.github.com/repos/StratumCMS/Stratum/releases');
 
-            if ($response->ok()) {
+            if ($response->ok() && str_contains($response->header('Content-Type', ''), 'application/json')) {
                 $changelogs = collect($response->json())
                     ->map(function ($release) {
                         return [
@@ -327,26 +331,38 @@ class AdminController extends Controller
                         ];
                     })
                     ->toArray();
+            } else {
+                Log::warning('GitHub releases returned non-json content', [
+                    'status' => $response->status(),
+                    'body_snippet' => substr($response->body(), 0, 1000)
+                ]);
             }
-        } catch (\Exception $e) {
-            logger()->error('Erreur API GitHub (releases) : ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Erreur API GitHub (releases) : ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
         }
 
-        return view('admin.update', [
-            'changelogs' => $changelogs,
-        ]);
+        return view('admin.update', ['changelogs' => $changelogs]);
     }
-
 
     public function checkUpdate(Request $request)
     {
-        $currentVersion = config('app.version');
+        try {
+            $currentVersion = config('app.version');
 
-        $response = Http::get('https://api.github.com/repos/YuketsuSh/Stratum/releases/latest');
+            $response = Http::withHeaders([
+                'Accept' => 'application/vnd.github.v3+json',
+                'User-Agent' => 'StratumCMS-Updater'
+            ])->get('https://api.github.com/repos/StratumCMS/Stratum/releases/latest');
 
-        if ($response->ok()) {
+            if (! $response->ok() || ! str_contains($response->header('Content-Type', ''), 'application/json')) {
+                Log::warning('GitHub latest returned non-json content', [
+                    'status' => $response->status(),
+                    'body_snippet' => substr($response->body(), 0, 1000)
+                ]);
+                return response()->json(['error' => 'Impossible de récupérer la release.'], 502);
+            }
+
             $release = $response->json();
-
             $tag = $release['tag_name'] ?? null;
             $version = $tag ? ltrim($tag, 'v') : null;
 
@@ -354,7 +370,7 @@ class AdminController extends Controller
                 $asset = $release['assets'][0] ?? null;
 
                 if (!$asset || !isset($asset['browser_download_url'])) {
-                    return response()->json(['error' => 'Aucun fichier ZIP dans la release.'], 422);
+                    return response()->json(['error' => 'Aucun fichier ZIP disponible.'], 422);
                 }
 
                 return response()->json([
@@ -365,89 +381,104 @@ class AdminController extends Controller
                     'download_url' => $asset['browser_download_url'],
                 ]);
             }
-        }
 
-        return response()->json(['update_available' => false]);
+            return response()->json(['update_available' => false]);
+        } catch (\Throwable $e) {
+            Log::error('Erreur checkUpdate: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['error' => 'Erreur lors de la vérification de la mise à jour.'], 500);
+        }
     }
 
     public function runUpdate(Request $request)
     {
-        $url = $request->input('download_url');
-        $versionTag = $request->input('version_tag');
-        $remoteVersion = ltrim($versionTag, 'v');
-        $currentVersion = config('app.version');
+        try {
+            $url = $request->input('download_url');
+            $versionTag = $request->input('version_tag');
+            $remoteVersion = $versionTag ? ltrim($versionTag, 'v') : null;
+            $currentVersion = config('app.version');
 
-        if (version_compare($remoteVersion, $currentVersion, '<=') || !$remoteVersion) {
-            return response()->json([
-                'success' => false,
-                'message' => 'StratumCMS est déjà à jour.'
-            ], 200);
-        }
+            if (! $remoteVersion || version_compare($remoteVersion, $currentVersion, '<=')) {
+                return response()->json(['success' => false, 'message' => 'StratumCMS est déjà à jour.']);
+            }
 
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            return response()->json(['error' => 'URL invalide.'], 422);
-        }
+            if (! filter_var($url, FILTER_VALIDATE_URL)) {
+                return response()->json(['error' => 'URL invalide.'], 422);
+            }
 
-        $tmpDir = storage_path('app/cms-updates');
-        File::ensureDirectoryExists($tmpDir);
+            $tmpDir = storage_path('app/cms-updates');
+            File::ensureDirectoryExists($tmpDir);
+            $tmpZip = $tmpDir . '/update.zip';
+            $extractPath = $tmpDir . '/extracted';
+            File::deleteDirectory($extractPath);
+            File::ensureDirectoryExists($extractPath);
 
-        $tmpZip = $tmpDir . '/update.zip';
-        $extractPath = $tmpDir . '/extracted';
+            $response = Http::withOptions(['stream' => true])->get($url);
+            if (! $response->ok()) {
+                return response()->json(['error' => 'Téléchargement échoué.'], 500);
+            }
+            file_put_contents($tmpZip, $response->body());
 
-        $zipContent = @file_get_contents($url);
-        if (!$zipContent) {
-            return response()->json(['error' => 'Téléchargement échoué.'], 500);
-        }
+            if (!File::exists($tmpZip) || filesize($tmpZip) === 0) {
+                return response()->json(['error' => 'Fichier ZIP vide.'], 500);
+            }
 
-        file_put_contents($tmpZip, $zipContent);
-
-        $zip = new \ZipArchive();
-        if ($zip->open($tmpZip) === true) {
-            $zip->extractTo($extractPath);
+            $zip = new \ZipArchive();
+            if ($zip->open($tmpZip) !== true || ! $zip->extractTo($extractPath)) {
+                return response()->json(['error' => 'Extraction du ZIP impossible.'], 500);
+            }
             $zip->close();
-        } else {
-            return response()->json(['error' => 'Extraction impossible.'], 500);
-        }
 
-        $extractedRoot = File::directories($extractPath)[0] ?? null;
-        if (!$extractedRoot) {
-            return response()->json(['error' => 'Fichiers extraits introuvables.'], 500);
-        }
+            $extractedRoot = File::directories($extractPath)[0] ?? $extractPath;
+            $excluded = ['.env', 'vendor', 'storage', '.git', 'resources/themes', 'public/', 'modules/'];
 
-        $excluded = ['.env', 'vendor', 'storage', '.git', 'resources/themes', 'public/'];
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($extractedRoot, RecursiveDirectoryIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::SELF_FIRST
-        );
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($extractedRoot, \RecursiveDirectoryIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST
+            );
 
-        foreach ($iterator as $item) {
-            $relPath = str_replace($extractedRoot . '/', '', $item->getPathname());
+            foreach ($iterator as $item) {
+                $relPath = ltrim(str_replace($extractedRoot, '', $item->getPathname()), DIRECTORY_SEPARATOR);
+                if (collect($excluded)->contains(fn($e) => str_starts_with($relPath, trim($e, '/')))) {
+                    continue;
+                }
 
-            foreach ($excluded as $ignore) {
-                if (str_starts_with($relPath, $ignore)) continue 2;
+                $dest = base_path($relPath);
+                if ($item->isDir()) {
+                    File::ensureDirectoryExists($dest);
+                } else {
+                    File::copy($item->getPathname(), $dest);
+                }
             }
 
-            $dest = base_path($relPath);
-            if ($item->isDir()) {
-                if (!File::exists($dest)) File::makeDirectory($dest, 0755, true);
-            } else {
-                File::copy($item->getPathname(), $dest);
+            Artisan::call('config:clear');
+            Artisan::call('cache:clear');
+            Artisan::call('view:clear');
+            Artisan::call('migrate', ['--force' => true]);
+
+            try {
+                if (class_exists(Process::class)) {
+                    $proc = Process::fromShellCommandline('composer install --no-interaction --prefer-dist --optimize-autoloader');
+                    $proc->setTimeout(300);
+                    $proc->run();
+                    if (! $proc->isSuccessful()) {
+                        Log::warning('Composer install non-successful', ['output' => $proc->getOutput()]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Erreur composer install: ' . $e->getMessage());
             }
+
+            File::delete($tmpZip);
+            File::deleteDirectory($extractPath);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Mise à jour vers la version ' . $remoteVersion . ' effectuée avec succès.'
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Erreur runUpdate: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'error' => 'Erreur lors de la mise à jour.'], 500);
         }
-
-        Artisan::call('config:clear');
-        Artisan::call('cache:clear');
-        Artisan::call('view:clear');
-        Artisan::call('migrate', ['--force' => true]);
-        Process::run('composer install --no-interaction --prefer-dist --optimize-autoloader');
-
-        File::delete($tmpZip);
-        File::deleteDirectory($extractPath);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Mise à jour vers la version ' . $remoteVersion . ' effectuée avec succès.'
-        ]);
     }
 
 }
