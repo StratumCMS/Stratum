@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Theme;
+use App\Support\ModuleComponentRenderer;
 use App\Support\ModuleNavigationManager;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
@@ -19,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ModuleNavigationManager::class, fn () => new ModuleNavigationManager());
+        $this->app->singleton(ModuleComponentRenderer::class, fn () => new ModuleComponentRenderer());
 
         if (file_exists(storage_path('installed'))) {
             require_once app_path('Helpers/helpers.php');
