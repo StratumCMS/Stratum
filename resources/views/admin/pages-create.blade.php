@@ -115,13 +115,15 @@
                                 text: 'Composants',
                                 icon: 'template',
                                 fetch: function(callback) {
-                                    var items = components.map(comp => ({
-                                        type: 'menuitem',
-                                        text: comp.name,
-                                        onAction: function() {
-                                            editor.insertContent('{{ ' + comp.slug + ' }}');
-                                        }
-                                    }));
+                                    var items = components.map(function(comp) {
+                                        return {
+                                            type: 'menuitem',
+                                            text: comp.name,
+                                            onAction: function() {
+                                                editor.insertContent('&lbrace;&lbrace; ' + comp.slug + ' &rbrace;&rbrace;');
+                                            }
+                                        };
+                                    });
 
                                     if (items.length === 0) {
                                         items.push({
@@ -139,19 +141,6 @@
                 })
                 .catch(e => {
                     console.error('Erreur lors du chargement des composants:', e);
-                    window.tinyLoadAndInit({
-                        selector: 'textarea#tinymce',
-                        height: 400,
-                        menubar: false,
-                        plugins: 'link lists code fullscreen table',
-                        toolbar: 'undo redo | formatselect | bold italic underline | bullist numlist | link table | code fullscreen',
-                        branding: false,
-                        skin: 'oxide-dark',
-                        content_css: 'dark',
-                        base_url: '/vendor/tinymce',
-                        suffix: '.min',
-                        license_key: 'gpl'
-                    }).catch(e => console.error(e));
                 });
         });
 
@@ -159,7 +148,7 @@
             let s = '' + title.toLowerCase()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                 .replace(/[^a-z0-9\s-]/g, '').trim()
-                .replace(/\s+/g,'-').replace(/-+/g,'-');
+                .replace(/\s+/g, '-').replace(/-+/g, '-');
             document.getElementById('slug').value = s;
         }
     </script>
