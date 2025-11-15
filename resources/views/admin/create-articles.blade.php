@@ -140,7 +140,6 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('vendor/tinymce/tinymce.min.js') }}"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
     <script>
         function createArticle() {
@@ -185,21 +184,20 @@
             }
         }
 
-        tinymce.init({
-            selector: '#content-editor',
-            height: 400,
-            menubar: false,
-            plugins: 'link image media lists table',
-            toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link image media table',
-            branding: false,
-
-            base_url: '/vendor/tinymce',
-            suffix: '.min',
-
-            skin: 'oxide-dark',
-            content_css: 'dark',
-
-            license_key: 'no-license'
+        document.addEventListener('DOMContentLoaded', function () {
+            window.tinyLoadAndInit({
+                selector: '#content-editor',
+                height: 400,
+                menubar: false,
+                plugins: 'link lists code fullscreen table',
+                toolbar: 'undo redo | formatselect | bold italic underline | bullist numlist | link table | code fullscreen',
+                branding: false,
+                skin: 'oxide-dark',
+                content_css: 'dark',
+                base_url: '/vendor/tinymce',
+                suffix: '.min',
+                license_key: 'gpl'
+            }).catch(e => console.error(e));
         });
     </script>
 @endpush

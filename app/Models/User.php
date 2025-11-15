@@ -61,7 +61,60 @@ class User extends Authenticatable
     }
 
     public function hasRole($role){
-        return $this->roles()->where('name', $role)->exists();
+        if (is_string($role)) {
+            return $this->roles()->where('name', $role)->exists();
+        }
+
+        if ($role instanceof Role) {
+            return $this->roles()->where('id', $role->id)->exists();
+        }
+
+        return false;
+    }
+
+    public function assignRole($role)
+    {
+        if (is_string($role)) {
+            $role = Role::where('name', $role)->firstOrFail();
+        }
+
+        if ($role instanceof Role) {
+            return $this->roles()->syncWithoutDetaching([$role->id]);
+        }
+
+        return false;
+    }
+
+    public function removeRole($role)
+    {
+        if (is_string($role)) {
+            $role = Role::where('name', $role)->firstOrFail();
+        }
+
+        if ($role instanceof Role) {
+            return $this->roles()->detach($role->id);
+        }
+
+        return false;
+    }
+
+    public function syncRoles($roles)
+    {
+        $roleIds = [];
+
+        foreach ($roles as $role) {
+            if (is_string($role)) {
+                $role = Role::where('name', $role)->firstOrFail();
+            }
+
+            if ($role instanceof Role) {
+                $roleIds[] = $role->id;
+            } elseif (is_numeric($role)) {
+                $roleIds[] = $role;
+            }
+        }
+
+        return $this->roles()->sync($roleIds);
     }
 
     public function permissions()

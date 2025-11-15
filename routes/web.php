@@ -16,6 +16,7 @@ use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\LoadActiveTheme;
+use App\Models\Page;
 use App\Models\Theme;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\CheckHeadlessMode;
@@ -38,7 +39,18 @@ require __DIR__.'/admin.php';
 
 Route::middleware(['check.installation', LoadActiveTheme::class, 'headless'])->group(function () {
 
-    Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/', function () {
+        $homePage = Page::where('is_home', true)
+            ->where('status', 'published')
+            ->first();
+
+        if ($homePage) {
+            $homePage->increment('views');
+            return theme_view('pages', ['page' => $homePage]);
+        }
+
+        return app(HomeController::class)->index();
+    })->name('home');
 
     Route::get('/articles', [ArticleController::class, 'indexPub'])->name('posts.index');
     Route::get('/articles/{article}', [ArticleController::class, 'show'])->name('posts.show');

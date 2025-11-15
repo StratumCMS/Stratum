@@ -60,6 +60,7 @@ class ModuleController extends Controller
         }
 
         $directories = File::directories($modulesDir);
+        $scannedSlugs = [];
         $scannedCount = 0;
         $addedCount = 0;
 
@@ -77,6 +78,8 @@ class ModuleController extends Controller
             }
 
             $slug = basename($directory);
+            $scannedSlugs[] = $slug;
+
             $author = is_array($manifest['authors'])
                 ? implode(', ', $manifest['authors'])
                 : ($manifest['authors'] ?? 'Inconnu');
@@ -100,16 +103,27 @@ class ModuleController extends Controller
             $scannedCount++;
         }
 
+        $deletedCount = Module::whereNotIn('slug', $scannedSlugs)->count();
+        if ($deletedCount > 0) {
+            Module::whereNotIn('slug', $scannedSlugs)->delete();
+        }
+
         if (request()->isMethod('post')) {
-            if ($addedCount > 0) {
-                return back()->with('success', "✅ {$addedCount} nouveau(x) module(s) détecté(s) et ajouté(s) (désactivés par défaut).");
+            if ($addedCount > 0 || $deletedCount > 0) {
+                $message = "✅ ";
+                if ($addedCount > 0) {
+                    $message .= "{$addedCount} nouveau(x) module(s) ajouté(s). ";
+                }
+                if ($deletedCount > 0) {
+                    $message .= "{$deletedCount} module(s) supprimé(s) de la liste.";
+                }
+                return back()->with('success', $message);
             } elseif ($scannedCount > 0) {
-                return back()->with('success', "✅ {$scannedCount} module(s) scanné(s), aucun nouveau module détecté.");
+                return back()->with('success', "✅ {$scannedCount} module(s) scanné(s), aucun changement détecté.");
             } else {
                 return back()->with('error', 'Aucun module valide trouvé dans le dossier modules/.');
             }
         }
-
     }
 
     public function install(Request $request, $id)
@@ -325,19 +339,39 @@ class ModuleController extends Controller
         $module = Module::where('slug', $slug)->firstOrFail();
         $licenseKey = setting('site_key');
 
-        if (!$licenseKey) {
-            return back()->with('error', 'Aucune licence valide trouvée.');
+        $marketResponse = Http::get('https://stratumcms.com/api/v1/products');
+        if (!$marketResponse->successful()) {
+            return back()->with('error', 'Impossible de contacter le serveur de modules.');
         }
 
-        $licensedProducts = LicenseServer::getLicensedProducts($licenseKey);
-        $product = collect($licensedProducts['products'] ?? [])
-            ->firstWhere('slug', $slug);
+        $marketModules = collect($marketResponse->json())
+            ->filter(fn($item) => $item['type'] === 'module')
+            ->keyBy('slug');
 
-        if (!$product || $product['type'] !== 'module') {
-            return back()->with('error', 'Ce module n’est pas disponible pour la mise à jour.');
+        $product = $marketModules->get($slug);
+
+        if (!$product) {
+            return back()->with('error', 'Ce module n\'est pas disponible pour la mise à jour.');
         }
 
-        $zipPath = LicenseServer::downloadProduct($product['id'], $licenseKey);
+        $requiresLicense = floatval($product['price']) > 0;
+
+        if ($requiresLicense) {
+            if (!$licenseKey) {
+                return back()->with('error', 'Aucune licence valide trouvée pour ce module payant.');
+            }
+
+            $licensedProducts = LicenseServer::getLicensedProducts($licenseKey);
+            $isLicensed = collect($licensedProducts['products'] ?? [])
+                ->pluck('slug')
+                ->contains($slug);
+
+            if (!$isLicensed) {
+                return back()->with('error', 'Ce module payant n\'est pas présent dans votre licence.');
+            }
+        }
+
+        $zipPath = LicenseServer::downloadProduct($product['id'], $requiresLicense ? $licenseKey : null);
         if (!$zipPath || !file_exists($zipPath)) {
             return back()->with('error', 'Échec du téléchargement de la mise à jour.');
         }
@@ -351,13 +385,13 @@ class ModuleController extends Controller
             $zip->close();
         } else {
             File::deleteDirectory($tempDir);
-            return back()->with('error', 'Impossible d’extraire l’archive ZIP.');
+            return back()->with('error', 'Impossible d\'extraire l\'archive ZIP.');
         }
 
         $manifestPath = $tempDir . '/plugin.json';
         if (!File::exists($manifestPath)) {
             File::deleteDirectory($tempDir);
-            return back()->with('error', 'Le plugin.json est manquant dans l’archive.');
+            return back()->with('error', 'Le plugin.json est manquant dans l\'archive.');
         }
 
         $manifest = json_decode(File::get($manifestPath), true);
@@ -378,6 +412,6 @@ class ModuleController extends Controller
         \Artisan::call('config:clear');
         \Artisan::call('route:clear');
 
-        return back()->with('success', 'Module mis à jour avec succès.');
+        return back()->with('success', "✅ Module mis à jour vers la version {$newVersion}.");
     }
 }

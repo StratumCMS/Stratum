@@ -215,7 +215,7 @@
                     </template>
                 </div>
 
-                <div x-show="filteredModules.length === 0" class="rounded-xl border border-border bg-card p-12 text-center shadow-sm">
+                <div x-show="filteredModules.length === 0 && search !== ''" class="rounded-xl border border-border bg-card p-12 text-center shadow-sm">
                     <div class="flex flex-col items-center">
                         <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted/50">
                             <i class="fa-solid fa-magnifying-glass text-3xl text-muted-foreground/50"></i>
@@ -368,7 +368,7 @@
                     </template>
                 </div>
 
-                <div x-show="filteredModules.length === 0" class="rounded-xl border border-border bg-card p-12 text-center shadow-sm">
+                <div x-show="filteredModules.length === 0 && search !== ''" class="rounded-xl border border-border bg-card p-12 text-center shadow-sm">
                     <div class="flex flex-col items-center">
                         <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted/50">
                             <i class="fa-solid fa-magnifying-glass text-3xl text-muted-foreground/50"></i>

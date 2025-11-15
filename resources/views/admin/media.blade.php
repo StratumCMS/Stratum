@@ -4,29 +4,34 @@
 
 @section('content')
     <div class="space-y-8 max-w-6xl mx-auto" x-data="{ openUpload: false, fileName: '', filePath: '', file: null }">
-        {{-- Success message --}}
         @if(session('success'))
             <div class="p-4 bg-green-100 text-green-800 rounded-lg border border-green-300 shadow">
                 <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
             </div>
         @endif
 
-        {{-- Stats --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <x-dashboard.card title="Total Fichiers" icon="fas fa-file-alt" color="primary" :value="$mediaCount" />
             <x-dashboard.card title="Images" icon="fas fa-image" color="success" :value="$imageCount" />
             <x-dashboard.card title="Vidéos" icon="fas fa-video" color="purple-600" :value="$videoCount" />
         </div>
 
-        {{-- Upload Button --}}
-        <div class="text-right">
+        <div class="text-right flex justify-end gap-2">
+            <form action="{{ route('admin.media.sync') }}" method="POST" class="inline">
+                @csrf
+                <button type="submit"
+                        class="bg-muted text-card-foreground border px-4 py-2 rounded hover:bg-muted/80 transition shadow inline-flex items-center"
+                        onclick="return confirm('Resynchroniser le lien symbolique storage ?')">
+                    <i class="fas fa-sync mr-2"></i> Sync Storage
+                </button>
+            </form>
+
             <button @click="openUpload = true"
                     class="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 transition shadow inline-flex items-center">
                 <i class="fas fa-upload mr-2"></i> Ajouter un fichier
             </button>
         </div>
 
-        {{-- Upload Modal --}}
         <div x-show="openUpload" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div class="bg-card border rounded-2xl shadow-xl w-full max-w-lg p-6 relative text-card-foreground">
                 <button @click="openUpload = false"
@@ -67,7 +72,6 @@
         </div>
 
 
-        {{-- Media Table --}}
         <div class="bg-card border rounded-2xl shadow p-6 text-card-foreground">
             <h2 class="text-xl font-semibold mb-4">Fichiers Médias</h2>
 

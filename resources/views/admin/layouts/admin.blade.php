@@ -14,7 +14,7 @@
     </script>
 
     <title>{{ site_name() ?? "StratumCMS" }} - @yield('title', 'Admin Dashboard')</title>
-    @vite('resources/css/admin.css')
+    @vite(['resources/js/app.js', 'resources/css/admin.css'])
     <script src="https://kit.fontawesome.com/91664c67de.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
