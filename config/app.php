@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 
 return [
-    'version' => '0.1.2',
+    'version' => '0.1.3',
 
 
     /*
