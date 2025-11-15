@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Page;
+use App\Support\ModuleComponentRenderer;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PageController extends Controller
@@ -108,7 +110,30 @@ class PageController extends Controller
 
         $page->increment('views');
 
+        $renderer = app(ModuleComponentRenderer::class);
+        $page->renderer_content = $renderer->render($page->content);
+
         return theme_view('pages', compact('page'));
+    }
+
+    public function getAvailableComponents(): JsonResponse
+    {
+        $renderer = app(ModuleComponentRenderer::class);
+        $available = $renderer->available();
+
+        return response()->json(
+            collect($available)->map(fn($slug) => [
+                'slug' => $slug,
+                'name' => $this->formatComponentName($slug),
+            ])->values()
+        );
+    }
+
+    private function formatComponentName(string $slug): string {
+
+        $parts = explode('.', $slug);
+        return collect($parts)->map(fn($part) => ucwords(str_replace('-', ' ', $part)))
+            ->join(' - ');
     }
 
     private function getTemplates()

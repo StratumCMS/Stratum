@@ -4,6 +4,6 @@
 
 @section('content')
     <div class="prose max-w-none">
-        {!! $page->content !!}
+        {!! $page->renderer_content !!}
     </div>
 @endsection
