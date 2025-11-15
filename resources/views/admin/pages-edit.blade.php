@@ -102,19 +102,64 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            window.tinyLoadAndInit({
-                selector: 'textarea#tinymce',
-                height: 400,
-                menubar: false,
-                plugins: 'link lists code fullscreen table',
-                toolbar: 'undo redo | formatselect | bold italic underline | bullist numlist | link table | code fullscreen',
-                branding: false,
-                skin: 'oxide-dark',
-                content_css: 'dark',
-                base_url: '/vendor/tinymce',
-                suffix: '.min',
-                license_key: 'gpl'
-            }).catch(e => console.error(e));
+            fetch('{{ route("admin.modules.module-components") }}')
+                .then(r => r.json())
+                .then(components => {
+                    window.tinyLoadAndInit({
+                        selector: 'textarea#tinymce',
+                        height: 400,
+                        menubar: false,
+                        plugins: 'link lists code fullscreen table',
+                        toolbar: 'undo redo | formatselect | bold italic underline | bullist numlist | link table | modulecomponent | code fullscreen',
+                        branding: false,
+                        skin: 'oxide-dark',
+                        content_css: 'dark',
+                        base_url: '/vendor/tinymce',
+                        suffix: '.min',
+                        license_key: 'gpl',
+                        setup: function(editor) {
+                            editor.ui.registry.addMenuButton('modulecomponent', {
+                                text: 'Composants',
+                                icon: 'template',
+                                fetch: function(callback) {
+                                    var items = components.map(comp => ({
+                                        type: 'menuitem',
+                                        text: comp.name,
+                                        onAction: function() {
+                                            editor.insertContent('{{ ' + comp.slug + ' }}');
+                                        }
+                                    }));
+
+                                    if (items.length === 0) {
+                                        items.push({
+                                            type: 'menuitem',
+                                            text: 'Aucun composant disponible',
+                                            enabled: false
+                                        });
+                                    }
+
+                                    callback(items);
+                                }
+                            });
+                        }
+                    }).catch(e => console.error(e));
+                })
+                .catch(e => {
+                    console.error('Erreur lors du chargement des composants:', e);
+                    window.tinyLoadAndInit({
+                        selector: 'textarea#tinymce',
+                        height: 400,
+                        menubar: false,
+                        plugins: 'link lists code fullscreen table',
+                        toolbar: 'undo redo | formatselect | bold italic underline | bullist numlist | link table | code fullscreen',
+                        branding: false,
+                        skin: 'oxide-dark',
+                        content_css: 'dark',
+                        base_url: '/vendor/tinymce',
+                        suffix: '.min',
+                        license_key: 'gpl'
+                    }).catch(e => console.error(e));
+                });
         });
 
         function generateSlug(title) {
