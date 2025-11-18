@@ -15,8 +15,14 @@
 
     <title>{{ site_name() ?? "StratumCMS" }} - @yield('title', 'Admin Dashboard')</title>
     @vite(['resources/js/app.js', 'resources/css/admin.css'])
-    <script src="https://kit.fontawesome.com/91664c67de.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.css') }}">
+    <script src="{{ asset('vendor/fontawesome/js/fontawesome.js') }}"></script>
+    <script src="{{ asset('vendor/fontawesome/js/solid.js') }}"></script>
+    <script src="{{ asset('vendor/fontawesome/js/sharp-solid.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    @stack('head')
+
 </head>
 <body class="min-h-screen flex w-full bg-background text-foreground">
 

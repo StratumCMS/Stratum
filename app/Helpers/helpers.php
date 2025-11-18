@@ -4,8 +4,12 @@ use App\Models\Module;
 use App\Models\NavbarElement;
 use App\Models\Setting;
 use App\Models\Theme;
+use App\Support\ModuleComponentRenderer;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 if (!function_exists('setting')) {
@@ -61,6 +65,115 @@ if (!function_exists('theme_config')) {
     function theme_config(?string $key = null, mixed $default = null): mixed
     {
         return $key === null ? config('theme') : config('theme.'.$key, $default);
+    }
+}
+
+if (!function_exists('module_asset')) {
+    function module_asset(string|array $path, ?string $slug = null): string
+    {
+        try {
+            if (is_array($path)) $path = implode('/', $path);
+
+            if (app()->runningInConsole() || !Schema::hasTable('modules')) {
+                return asset(ltrim($path, '/'));
+            }
+
+            if (!$slug) {
+                $module = Module::where('active', true)->first();
+                if (!$module) return asset(ltrim($path, '/'));
+                $slug = $module->slug;
+            }
+
+            $fullPath = public_path("modules_public/{$slug}/assets/" . ltrim($path, '/'));
+            if (!file_exists($fullPath)) {
+                Log::warning("module_asset: fichier introuvable {$fullPath}");
+                return asset(ltrim($path, '/'));
+            }
+
+            return asset("modules_public/{$slug}/assets/" . ltrim($path, '/'));
+        } catch (\Throwable $e) {
+            Log::error('module_asset error: ' . $e->getMessage());
+        }
+
+        return asset(ltrim(is_array($path) ? implode('/', $path) : $path, '/'));
+    }
+}
+
+if (!function_exists('module_assets')) {
+    function module_assets(?string $type = null): \Illuminate\Support\HtmlString
+    {
+        if (app()->runningInConsole() || !Schema::hasTable('modules')) return new \Illuminate\Support\HtmlString('');
+
+        $html = '';
+        $modules = Module::where('active', true)->get();
+
+        foreach ($modules as $module) {
+            $slug = $module->slug;
+            $baseUrl = asset("modules_public/{$slug}/assets");
+
+            $pluginJson = base_path("modules_public/{$slug}/plugin.json");
+            $declared = [];
+
+            if (File::exists($pluginJson)) {
+                $content = json_decode(File::get($pluginJson), true);
+                $declared = $content['assets'] ?? [];
+            }
+
+            $addFile = function ($relativePath) use (&$html, $baseUrl) {
+                $ext = pathinfo($relativePath, PATHINFO_EXTENSION);
+                $url = rtrim($baseUrl, '/') . '/' . ltrim($relativePath, '/');
+                if ($ext === 'css') $html .= '<link rel="stylesheet" href="' . e($url) . '">' . PHP_EOL;
+                if ($ext === 'js') $html .= '<script src="' . e($url) . '"></script>' . PHP_EOL;
+            };
+
+            if (!empty($declared)) {
+                if (($type === null || $type === 'css') && !empty($declared['css'])) {
+                    foreach ($declared['css'] as $f) $addFile($f);
+                }
+                if (($type === null || $type === 'js') && !empty($declared['js'])) {
+                    foreach ($declared['js'] as $f) $addFile($f);
+                }
+                continue;
+            }
+
+            $publicDir = public_path("modules_public/{$slug}/assets");
+            if (File::isDirectory($publicDir)) {
+                $files = File::allFiles($publicDir);
+                foreach ($files as $file) {
+                    $ext = $file->getExtension();
+                    if ($type && $type !== $ext) continue;
+                    $relativePath = str_replace($publicDir . DIRECTORY_SEPARATOR, '', $file->getPathname());
+                    $relativePath = str_replace('\\', '/', $relativePath);
+                    $addFile($relativePath);
+                }
+            }
+        }
+
+        return new \Illuminate\Support\HtmlString($html);
+    }
+}
+
+
+if (!function_exists('render_module_components')) {
+    function render_module_components(string $content): string
+    {
+        try {
+            return app(ModuleComponentRenderer::class)->render($content);
+        } catch (\Throwable $e) {
+            \Log::error("Erreur lors du rendu des composants: {$e->getMessage()}");
+            return $content;
+        }
+    }
+}
+
+if (!function_exists('available_module_components')) {
+    function available_module_components(): array
+    {
+        try {
+            return app(ModuleComponentRenderer::class)->available();
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 }
 
