@@ -44,7 +44,7 @@
                                 <div class="space-y-1">
                                     <button class="flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50 transition"
                                             onclick="this.nextElementSibling.classList.toggle('hidden')">
-                                        <i class="fas {{ $item['icon'] ?? 'fa-puzzle-piece' }} mr-3"></i>
+                                        <i class="{{ $item['icon'] ?? 'fa-puzzle-piece' }} mr-3"></i>
                                         <span>{{ $item['label'] }}</span>
                                         <i class="ml-auto fas fa-chevron-down text-xs"></i>
                                     </button>
@@ -52,7 +52,7 @@
                                         @foreach ($item['items'] as $subItem)
                                             <a href="{{ route($subItem['route']) }}"
                                                class="flex items-center px-3 py-2 text-sm rounded-md text-sidebar-foreground hover:bg-sidebar-accent/50 transition">
-                                                <i class="fas {{ $subItem['icon'] ?? 'fa-circle' }} mr-2 text-xs"></i>
+                                                <i class="{{ $subItem['icon'] ?? 'fa-circle' }} mr-2 text-xs"></i>
                                                 <span>{{ $subItem['label'] }}</span>
                                             </a>
                                         @endforeach
