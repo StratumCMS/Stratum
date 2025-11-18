@@ -18,19 +18,24 @@ class ModuleComponentRenderer {
 
     public function render(string $content): string {
 
+        $pattern = '/\{\{\s*([a-z0-9\-_]+(?:\.[a-z0-9\-_]+)+)(?:\s+([^}]+?))?\s*\}\}/i';
+
         return preg_replace_callback(
-            '/\{\{\s*([a-z0-9\-_]+\.[a-z0-9\-_]+)\s*\}\}/i',
+            $pattern,
             function ($matches) {
-                return $this->renderComponent($matches[1]);
+                $slug = $matches[1];
+                $paramString = $matches[2] ?? '';
+                $params = $this->parseParams($paramString);
+                return $this->renderComponent($slug, $params);
             },
             $content
         );
     }
 
-    protected function renderComponent(string $slug): string {
+    protected function renderComponent(string $slug, array $params = []): string {
 
         if (!isset($this->components[$slug])) {
-            Log::warning("Composant de module non trouvé : ${slug}");
+            Log::warning("Composant de module non trouvé : {$slug}");
 
             if (config('app.debug')) {
                 return "<div class='border border-red-500 bg-red-50 text-red-700 p-4 rounded'>
@@ -45,7 +50,7 @@ class ModuleComponentRenderer {
             $data = [];
 
             if (is_callable($component['data'])) {
-                $data = call_user_func($component['data']);
+                $data = call_user_func($component['data'], $params);
             }
 
             if (!View::exists($component['view'])) {
@@ -66,7 +71,49 @@ class ModuleComponentRenderer {
 
             return '<!-- Erreur de rendu du composant -->';
         }
+    }
 
+    protected function parseParams(string $paramString): array
+    {
+        $params = [];
+
+        if (trim($paramString) === '') {
+            return $params;
+        }
+
+        $regex = '/([a-z0-9_\-]+)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s]+))/i';
+
+        if (preg_match_all($regex, $paramString, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $m) {
+                $key = $m[1];
+                $value = null;
+
+                if ($m[2] !== '') {
+                    $value = $m[2];
+                } elseif ($m[3] !== '') {
+                    $value = $m[3];
+                } else {
+                    $value = $m[4];
+                }
+
+                if (is_numeric($value)) {
+                    $value = (strpos($value, '.') !== false) ? (float)$value : (int)$value;
+                } else {
+                    $lower = strtolower($value);
+                    if ($lower === 'true') {
+                        $value = true;
+                    } elseif ($lower === 'false') {
+                        $value = false;
+                    } elseif ($lower === 'null') {
+                        $value = null;
+                    }
+                }
+
+                $params[$key] = $value;
+            }
+        }
+
+        return $params;
     }
 
     public function available(): array {
@@ -84,5 +131,4 @@ class ModuleComponentRenderer {
     public function clear(): void {
         $this->components = [];
     }
-
 }

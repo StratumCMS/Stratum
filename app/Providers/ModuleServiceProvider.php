@@ -47,6 +47,7 @@ class ModuleServiceProvider extends ServiceProvider
         $modulePath = base_path('modules/' . $module->slug);
 
         $this->loadModuleResources($modulePath, $module->slug);
+        $this->publishAssets($modulePath, $module->slug);
 
         $this->loadModuleProviders($modulePath, $module->slug);
     }
@@ -196,6 +197,38 @@ class ModuleServiceProvider extends ServiceProvider
             }
         }
     }
+
+    protected function publishAssets(string $modulePath, string $slug): void
+    {
+        $candidateDirs = [
+            $modulePath . '/assets',
+            $modulePath . '/public',
+            $modulePath . '/resources/assets',
+        ];
+
+        $source = null;
+        foreach ($candidateDirs as $dir) {
+            if (File::isDirectory($dir)) {
+                $source = $dir;
+                break;
+            }
+        }
+
+        if (!$source) return;
+
+        $target = public_path("modules_public/{$slug}/assets");
+
+        if (File::exists($target)) {
+            File::deleteDirectory($target);
+        }
+
+        File::copyDirectory($source, $target);
+
+        if (config('app.debug')) {
+            Log::debug("Assets copiés pour module {$slug} depuis {$source}");
+        }
+    }
+
 
     protected function getClassFromFile($file, $modulePath): string
     {
