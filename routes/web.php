@@ -45,8 +45,7 @@ Route::middleware(['check.installation', LoadActiveTheme::class, 'headless'])->g
             ->first();
 
         if ($homePage) {
-            $homePage->increment('views');
-            return theme_view('pages', ['page' => $homePage]);
+            return app(PageController::class)->show($homePage->slug);
         }
 
         return app(HomeController::class)->index();
