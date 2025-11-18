@@ -45,21 +45,23 @@
 
     @stack('head')
 </head>
-<body class="min-h-screen flex w-full bg-background text-foreground antialiased">
+<body class="h-screen flex bg-background text-foreground antialiased overflow-hidden">
 
 @include('admin.partials.sidebar')
 
 <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-40 lg:hidden hidden transition-opacity duration-300"
      onclick="toggleSidebar()"></div>
 
-<div class="flex-1 min-h-screen lg:ml-64 flex flex-col transition-all duration-300">
+<div class="flex-1 flex flex-col lg:ml-64 h-screen">
     @include('admin.partials.topbar')
 
-    <main class="flex-1 p-4 sm:p-6 lg:p-8 animate-fade-in overflow-x-hidden">
-        <div class="max-w-7xl mx-auto w-full">
-            @yield('content')
-        </div>
-    </main>
+    <div class="flex-1 overflow-hidden">
+        <main class="h-full overflow-y-auto p-4 sm:p-6 lg:p-8">
+            <div class="max-w-7xl mx-auto w-full">
+                @yield('content')
+            </div>
+        </main>
+    </div>
 </div>
 
 @include('admin.partials.search-modal')
