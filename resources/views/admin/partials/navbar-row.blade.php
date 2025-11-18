@@ -1,67 +1,80 @@
-@php
-    $typeColors = [
-        'home' => 'bg-blue-100 text-blue-800',
-        'module' => 'bg-purple-100 text-purple-800',
-        'external_link' => 'bg-green-100 text-green-800',
-        'page' => 'bg-orange-100 text-orange-800',
-        'post' => 'bg-red-100 text-red-800',
-        'post_list' => 'bg-pink-100 text-pink-800',
-        'dropdown' => 'bg-gray-100 text-gray-800',
-    ];
-@endphp
-
-<tr
-    data-id="{{ $item->id }}"
-    class="border-b transition-colors hover:bg-muted/50 {{ $isChild ? 'bg-muted/30' : 'cursor-move' }}"
->
-    <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 w-8 px-4">
-        @if ($isChild)
-            <i class="fas fa-chevron-right h-4 w-4 ml-4 text-muted-foreground"></i>
-        @else
-            <i class="fas fa-grip-vertical h-4 w-4 text-muted-foreground"></i>
-        @endif
-    </td>
-
-    <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 font-medium">
-        <div class="flex items-center gap-2">
-            <span class="{{ $isChild ? 'ml-4' : '' }}">{{ $item->name }}</span>
+<tr data-id="{{ $item->id }}" class="sortable-item hover:bg-muted/20 transition-colors {{ $isChild ? 'bg-muted/10' : '' }}">
+    <td class="px-4 py-3">
+        <div class="sortable-handle cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors p-1 rounded">
+            <i class="fas fa-grip-lines"></i>
         </div>
     </td>
 
-    <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-        <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $typeColors[$item->type] ?? 'bg-gray-100 text-gray-800' }}">
-            {{ ucfirst(str_replace('_', ' ', $item->type)) }}
+    <td class="px-4 py-3">
+        <div class="flex items-center space-x-3 min-w-0 {{ $isChild ? 'ml-6' : '' }}">
+            @if($isChild)
+                <i class="fas fa-level-up-alt rotate-90 text-muted-foreground/60 text-xs"></i>
+            @endif
+            <div class="flex items-center space-x-2 min-w-0 flex-1">
+                @if($item->icon)
+                    <i class="{{ $item->icon }} text-muted-foreground w-4 h-4 flex-shrink-0"></i>
+                @endif
+                <span class="font-medium text-foreground truncate" title="{{ $item->name }}">
+                    {{ $item->name }}
+                </span>
+            </div>
+        </div>
+    </td>
+
+    <td class="px-4 py-3">
+        @if($item->type === 'dropdown')
+            <span class="inline-flex items-center rounded-full bg-purple-500/10 text-purple-600 px-2.5 py-0.5 text-xs font-medium">
+                <i class="fas fa-caret-down mr-1.5 w-3 h-3"></i>
+                Dropdown
+            </span>
+        @else
+            <span class="inline-flex items-center rounded-full bg-green-500/10 text-green-600 px-2.5 py-0-5 text-xs font-medium">
+                <i class="fas fa-link mr-1.5 w-3 h-3"></i>
+                Lien
+            </span>
+        @endif
+    </td>
+
+    <td class="px-4 py-3">
+        <div class="flex items-center space-x-2 min-w-0">
+            @if($item->type === 'link')
+                <i class="fas fa-external-link-alt text-muted-foreground w-4 h-4 flex-shrink-0"></i>
+                <span class="text-sm text-muted-foreground font-mono truncate" title="{{ $item->url }}">
+                    {{ $item->url ?? '-' }}
+                </span>
+            @else
+                <span class="text-sm text-muted-foreground italic">
+                    {{ $item->children->count() }} sous-élément(s)
+                </span>
+            @endif
+        </div>
+    </td>
+
+    <td class="px-4 py-3">
+        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-medium">
+            {{ $item->position }}
         </span>
     </td>
 
-    <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 text-muted-foreground">
-        {{ $item->value ?? ($item->type === 'home' ? '/' : '—') }}
-    </td>
-
-    <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 text-center">
-        {{ $item->position }}
-    </td>
-
-    <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-        <div class="flex space-x-2">
+    <td class="px-4 py-3">
+        <div class="flex items-center space-x-1">
             <a href="{{ route('navbar.edit', $item) }}"
-               class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0">
-                <i class="fas fa-pen h-4 w-4"></i>
+               class="inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+               title="Modifier">
+                <i class="fas fa-edit w-4 h-4"></i>
             </a>
-            <form action="{{ route('navbar.destroy', $item) }}" method="POST"
-                  onsubmit="return confirm('Supprimer cet élément ?')">
-                @csrf @method('DELETE')
-                <button type="submit"
-                        class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent h-8 w-8 p-0 text-destructive hover:text-destructive">
-                    <i class="fas fa-trash h-4 w-4"></i>
-                </button>
-            </form>
+
+            <button @click="openDeleteModal('{{ $item->id }}', '{{ $item->name }}')"
+                    class="inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+                    title="Supprimer">
+                <i class="fas fa-trash-alt w-4 h-4"></i>
+            </button>
         </div>
     </td>
 </tr>
 
-@if ($item->children)
-    @foreach ($item->children as $child)
+@if($item->type === 'dropdown' && $item->children->isNotEmpty())
+    @foreach($item->children as $child)
         @include('admin.partials.navbar-row', ['item' => $child, 'isChild' => true])
     @endforeach
 @endif
