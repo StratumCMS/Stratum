@@ -30,7 +30,6 @@ Route::middleware(['check.installation', 'auth', 'can:access_dashboard', 'restri
     Route::post('/media/upload', [MediaController::class, 'upload'])->name('admin.media.upload');
     Route::delete('/media/{mediaItem}', [MediaController::class, 'delete'])->name('admin.media.delete');
     Route::post('/media/sync-storage', [MediaController::class, 'syncStorageLink'])->name('admin.media.sync');
-    Route::get('/themes', [AdminController::class, 'themePage'])->name('admin.themes');
     Route::get('/modules', [AdminController::class, 'modulePage'])->name('admin.modules');
     Route::get('/stats', [AdminController::class, 'stats'])->name('admin.stats');
     Route::get('/users', [AdminController::class, 'users'])->name('admin.users');

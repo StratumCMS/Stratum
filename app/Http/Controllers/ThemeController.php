@@ -31,7 +31,8 @@ class ThemeController extends Controller
                     $item['price'] = (float) $item['price'];
                     return $item;
                 })
-                ->values();
+                ->values()
+                ->toArray();
 
             if ($licenseKey) {
                 $licensedData = LicenseServer::getLicensedProducts($licenseKey);
