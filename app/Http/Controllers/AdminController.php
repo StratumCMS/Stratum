@@ -97,7 +97,7 @@ class AdminController extends Controller
                 'value' => $pageViews,
                 'change' => $pageViewsChange,
                 'icon' => 'fa-eye',
-                'color' => 'bg-success',
+                'color' => 'bg-blue-600',
             ],
             [
                 'title' => 'Articles publiés',
