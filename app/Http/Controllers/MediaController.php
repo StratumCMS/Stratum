@@ -12,6 +12,20 @@ class MediaController extends Controller
     {
         $mediaItems = MediaItem::with('media')->latest()->get();
 
+        if (request()->wantsJson() || request()->has('json')) {
+            return response()->json([
+                'media' => $mediaItems->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'name' => $item->name,
+                        'url' => $item->getFirstMediaUrl(),
+                        'type' => $item->file_type,
+                        'created_at' => $item->created_at->toDateTimeString(),
+                    ];
+                })
+            ]);
+        }
+
         $mediaCount = $mediaItems->count();
         $imageCount = $mediaItems->filter(fn ($item) => $item->file_type === 'image')->count();
         $videoCount = $mediaItems->filter(fn ($item) => $item->file_type === 'video')->count();
@@ -33,9 +47,24 @@ class MediaController extends Controller
 
         $media = $mediaItem->addMedia($file)->toMediaCollection('default');
 
-        $optimizer->optimize($media->getPath());
+        if (str_starts_with($media->mime_type, 'image/')) {
+            $optimizer->optimize($media->getPath());
+        }
 
         log_activity('media', 'Upload', "Fichier « {$name} » ajouté");
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Fichier uploadé avec succès.',
+                'media' => [
+                    'id' => $mediaItem->id,
+                    'name' => $mediaItem->name,
+                    'url' => $mediaItem->getFirstMediaUrl(),
+                    'type' => $mediaItem->file_type,
+                ]
+            ]);
+        }
 
         return back()->with('success', 'Fichier uploadé avec succès.');
     }
@@ -49,7 +78,12 @@ class MediaController extends Controller
                 if (is_link($publicStoragePath)) {
                     unlink($publicStoragePath);
                 } else {
-                    return back()->with('error', 'Un dossier/fichier "storage" existe déjà dans public/. Supprimez-le manuellement.');
+                    $message = 'Un dossier/fichier "storage" existe déjà dans public/. Supprimez-le manuellement.';
+
+                    if (request()->wantsJson()) {
+                        return response()->json(['error' => $message], 400);
+                    }
+                    return back()->with('error', $message);
                 }
             }
 
@@ -57,10 +91,19 @@ class MediaController extends Controller
 
             log_activity('media', 'System', 'Lien symbolique storage resynchronisé');
 
+            if (request()->wantsJson()) {
+                return response()->json(['success' => 'Lien symbolique storage resynchronisé avec succès.']);
+            }
+
             return back()->with('success', 'Lien symbolique storage resynchronisé avec succès.');
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Erreur lors de la resynchronisation : ' . $e->getMessage());
+            $message = 'Erreur lors de la resynchronisation : ' . $e->getMessage();
+
+            if (request()->wantsJson()) {
+                return response()->json(['error' => $message], 500);
+            }
+            return back()->with('error', $message);
         }
     }
 
@@ -68,6 +111,11 @@ class MediaController extends Controller
     {
         log_activity('media', 'Upload', "Fichier « {$mediaItem->name} » supprimé");
         $mediaItem->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json(['success' => 'Fichier supprimé avec succès.']);
+        }
+
         return back()->with('success', 'Fichier supprimé.');
     }
 }
