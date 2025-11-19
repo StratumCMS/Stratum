@@ -3,9 +3,11 @@
     'icon' => null,
 ])
 
-<h2 class="text-lg font-semibold mb-4 flex items-center space-x-2">
+<div class="flex items-center space-x-3">
     @if($icon)
-        <i class="{{ $icon }}"></i>
+        <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <i class="{{ $icon }} text-primary text-sm"></i>
+        </div>
     @endif
-    <span>{{ $label }}</span>
-</h2>
+    <h2 class="text-lg sm:text-xl font-semibold text-foreground">{{ $label }}</h2>
+</div>

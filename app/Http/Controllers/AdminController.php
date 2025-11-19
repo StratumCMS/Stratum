@@ -14,6 +14,7 @@ use App\Models\Visit;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +22,7 @@ use Symfony\Component\Process\Process;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use ZipArchive;
 
 class AdminController extends Controller
 {
@@ -479,6 +481,389 @@ class AdminController extends Controller
             Log::error('Erreur runUpdate: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json(['success' => false, 'error' => 'Erreur lors de la mise à jour.'], 500);
         }
+    }
+
+    public function createBackup(Request $request)
+    {
+        try {
+            $backupName = 'backup-' . date('Y-m-d-H-i-s') . '.zip';
+            $backupPath = storage_path('app/backups/' . $backupName);
+
+            if (!File::exists(storage_path('app/backups'))) {
+                File::makeDirectory(storage_path('app/backups'), 0755, true);
+            }
+
+            $zip = new ZipArchive();
+            if ($zip->open($backupPath, ZipArchive::CREATE) === TRUE) {
+
+                $this->backupDatabase($zip);
+
+                $this->backupFiles($zip);
+
+                $zip->close();
+
+                log_activity('backup', 'Sauvegarde créée', "Sauvegarde manuelle créée: {$backupName}");
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Sauvegarde créée avec succès',
+                    'filename' => $backupName,
+                    'size' => $this->formatBytes(filesize($backupPath)),
+                    'date' => now()->format('d/m/Y H:i:s')
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la création de l\'archive'
+            ], 500);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur création sauvegarde: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la création de la sauvegarde: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function backupDatabase($zip)
+    {
+        try {
+            $databaseName = config('database.connections.mysql.database');
+            $sqlFile = storage_path('app/backups/temp_database.sql');
+
+            $process = new Process([
+                'mysqldump',
+                '--user=' . config('database.connections.mysql.username'),
+                '--password=' . config('database.connections.mysql.password'),
+                '--host=' . config('database.connections.mysql.host'),
+                $databaseName
+            ]);
+
+            $process->run();
+
+            if ($process->isSuccessful()) {
+                file_put_contents($sqlFile, $process->getOutput());
+                $zip->addFile($sqlFile, 'database/database.sql');
+            }
+
+        } catch (\Exception $e) {
+            Log::warning('Erreur sauvegarde base de données: ' . $e->getMessage());
+        }
+    }
+
+    private function backupFiles($zip)
+    {
+        $directories = [
+            'storage/app/public' => 'storage',
+            'config' => 'config',
+            'resources/views' => 'views',
+            'database/migrations' => 'migrations',
+            'database/seeders' => 'seeders',
+        ];
+
+        foreach ($directories as $source => $dest) {
+            $sourcePath = base_path($source);
+            if (File::exists($sourcePath)) {
+                $this->addDirectoryToZip($zip, $sourcePath, $dest);
+            }
+        }
+
+        if (File::exists(base_path('.env'))) {
+            $envContent = File::get(base_path('.env'));
+            $envContent = preg_replace('/DB_PASSWORD=.*/', 'DB_PASSWORD=******', $envContent);
+            $envContent = preg_replace('/MAIL_PASSWORD=.*/', 'MAIL_PASSWORD=******', $envContent);
+            $zip->addFromString('env/_.env', $envContent);
+        }
+    }
+
+    private function addDirectoryToZip($zip, $directory, $zipPath = '')
+    {
+        $files = File::allFiles($directory);
+
+        foreach ($files as $file) {
+            $relativePath = $zipPath . '/' . $file->getRelativePathname();
+            $zip->addFile($file->getRealPath(), $relativePath);
+        }
+    }
+
+    public function listBackups(Request $request)
+    {
+        try {
+            $backupPath = storage_path('app/backups');
+            $backups = [];
+
+            if (File::exists($backupPath)) {
+                $files = File::files($backupPath);
+
+                foreach ($files as $file) {
+                    if ($file->getExtension() === 'zip') {
+                        $backups[] = [
+                            'filename' => $file->getFilename(),
+                            'size' => $this->formatBytes($file->getSize()),
+                            'modified' => date('d/m/Y H:i:s', $file->getMTime()),
+                            'path' => $file->getRealPath()
+                        ];
+                    }
+                }
+
+                usort($backups, function($a, $b) {
+                    return filemtime($b['path']) - filemtime($a['path']);
+                });
+            }
+
+            return response()->json([
+                'success' => true,
+                'backups' => $backups
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur liste sauvegardes: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des sauvegardes'
+            ], 500);
+        }
+    }
+
+    public function restoreBackup(Request $request, $filename)
+    {
+        try {
+            $backupPath = storage_path('app/backups/' . $filename);
+
+            if (!File::exists($backupPath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sauvegarde non trouvée'
+                ], 404);
+            }
+
+            if (!$request->has('confirm_restore') || $request->input('confirm_restore') !== 'true') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Confirmation de restauration requise',
+                    'requires_confirmation' => true
+                ], 422);
+            }
+
+            $extractPath = storage_path('app/backups/temp_restore');
+            File::deleteDirectory($extractPath);
+            File::ensureDirectoryExists($extractPath);
+
+            $zip = new ZipArchive();
+            if ($zip->open($backupPath) === TRUE) {
+                $zip->extractTo($extractPath);
+                $zip->close();
+
+                $this->restoreDatabase($extractPath);
+
+                $this->restoreFiles($extractPath);
+
+                File::deleteDirectory($extractPath);
+
+                log_activity('backup', 'Sauvegarde restaurée', "Sauvegarde restaurée: {$filename}");
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Sauvegarde restaurée avec succès'
+                ]);
+
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Impossible d\'ouvrir l\'archive de sauvegarde'
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Erreur restauration sauvegarde: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la restauration: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function restoreDatabase($extractPath)
+    {
+        $sqlFile = $extractPath . '/database/database.sql';
+
+        if (File::exists($sqlFile)) {
+            $databaseName = config('database.connections.mysql.database');
+
+            DB::statement('DROP DATABASE IF EXISTS ' . $databaseName);
+            DB::statement('CREATE DATABASE ' . $databaseName);
+            DB::statement('USE ' . $databaseName);
+
+            $process = new Process([
+                'mysql',
+                '--user=' . config('database.connections.mysql.username'),
+                '--password=' . config('database.connections.mysql.password'),
+                '--host=' . config('database.connections.mysql.host'),
+                $databaseName
+            ]);
+
+            $process->setInput(file_get_contents($sqlFile));
+            $process->run();
+        }
+    }
+
+    private function restoreFiles($extractPath)
+    {
+        $directories = [
+            'storage' => base_path('storage/app/public'),
+            'config' => base_path('config'),
+            'views' => base_path('resources/views'),
+            'migrations' => base_path('database/migrations'),
+            'seeders' => base_path('database/seeders'),
+        ];
+
+        foreach ($directories as $source => $destination) {
+            $sourcePath = $extractPath . '/' . $source;
+            if (File::exists($sourcePath)) {
+                File::copyDirectory($sourcePath, $destination);
+            }
+        }
+    }
+
+    public function deleteBackup(Request $request, $filename)
+    {
+        try {
+            $backupPath = storage_path('app/backups/' . $filename);
+
+            if (!File::exists($backupPath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sauvegarde non trouvée'
+                ], 404);
+            }
+
+            File::delete($backupPath);
+
+            log_activity('backup', 'Sauvegarde supprimée', "Sauvegarde supprimée: {$filename}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sauvegarde supprimée avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur suppression sauvegarde: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression de la sauvegarde'
+            ], 500);
+        }
+    }
+
+    public function downloadBackup(Request $request, $filename)
+    {
+        try {
+            $backupPath = storage_path('app/backups/' . $filename);
+
+            if (!File::exists($backupPath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sauvegarde non trouvée'
+                ], 404);
+            }
+
+            log_activity('backup', 'Sauvegarde téléchargée', "Sauvegarde téléchargée: {$filename}");
+
+            return response()->download($backupPath, $filename);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur téléchargement sauvegarde: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du téléchargement de la sauvegarde'
+            ], 500);
+        }
+    }
+
+    public function clearCache(Request $request)
+    {
+        try {
+            Artisan::call('config:clear');
+            Artisan::call('cache:clear');
+            Artisan::call('view:clear');
+            Artisan::call('route:clear');
+
+            Artisan::call('modelCache:clear');
+
+            log_activity('system', 'Cache vidé', 'Tous les caches ont été vidés');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cache vidé avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur vidage cache: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du vidage du cache: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function createStorageLink(Request $request)
+    {
+        try {
+            Artisan::call('storage:link');
+
+            log_activity('system', 'Lien storage créé', 'Lien de stockage créé');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lien de stockage créé avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur création lien storage: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la création du lien de stockage'
+            ], 500);
+        }
+    }
+
+    public function optimize(Request $request)
+    {
+        try {
+            Artisan::call('optimize:clear');
+            Artisan::call('optimize');
+            Artisan::call('event:cache');
+            Artisan::call('view:cache');
+
+            log_activity('system', 'Application optimisée', 'Application optimisée pour la production');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Application optimisée avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur optimisation: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'optimisation: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function formatBytes($bytes, $precision = 2)
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+
+        $bytes /= pow(1024, $pow);
+
+        return round($bytes, $precision) . ' ' . $units[$pow];
     }
 
 }

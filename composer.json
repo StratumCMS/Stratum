@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "ext-zip": "*",
         "endroid/qr-code": "^5.1",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/breeze": "^1.29",

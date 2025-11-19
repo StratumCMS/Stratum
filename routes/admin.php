@@ -93,4 +93,13 @@ Route::middleware(['check.installation', 'auth', 'can:access_dashboard', 'restri
     Route::get('/profile', [ProfileController::class, 'adminEdit'])->name('admin.profile');
     Route::post('/profile/update', [ProfileController::class, 'updateAdmin'])->name('admin.profile.update');
 
+    Route::post('/backup/create', [AdminController::class, 'createBackup'])->name('admin.backup.create');
+    Route::get('/backup/list', [AdminController::class, 'listBackups'])->name('admin.backup.list');
+    Route::post('/backup/restore/{filename}', [AdminController::class, 'restoreBackup'])->name('admin.backup.restore');
+    Route::delete('/backup/delete/{filename}', [AdminController::class, 'deleteBackup'])->name('admin.backup.delete');
+    Route::post('/backup/download/{filename}', [AdminController::class, 'downloadBackup'])->name('admin.backup.download');
+    Route::post('/cache/clear', [AdminController::class, 'clearCache'])->name('admin.cache.clear');
+    Route::post('/storage/link', [AdminController::class, 'createStorageLink'])->name('admin.storage.link');
+    Route::post('/optimize', [AdminController::class, 'optimize'])->name('admin.optimize');
+
 });

@@ -1,5 +1,11 @@
-@props(['text'])
+@props([
+    'text',
+    'required' => false,
+])
 
-<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+<label {{ $attributes->merge(['class' => 'block text-sm font-medium text-foreground']) }}>
     {{ $text }}
+    @if($required)
+        <span class="text-destructive">*</span>
+    @endif
 </label>
