@@ -29,12 +29,16 @@ class ModuleController extends Controller
             $products = collect($response->json());
 
             $marketModules = $products
-                ->filter(fn($item) => $item['type'] === 'module')
+                ->filter(fn($item) => isset($item['type']) && $item['type'] === 'module')
                 ->map(function ($item) {
-                    $item['price'] = (float) $item['price'];
+                    $item['price'] = number_format((float) ($item['price'] ?? 0), 2, '.', '');
+                    $item['version'] = $item['version'] ?? null;
+                    $item['thumbnail'] = $item['thumbnail'] ?? null;
+                    $item['short_description'] = $item['short_description'] ?? ($item['description'] ?? '');
                     return $item;
                 })
-                ->values();
+                ->values()
+                ->toArray();
 
             if ($licenseKey) {
                 $licensedData = LicenseServer::getLicensedProducts($licenseKey);
